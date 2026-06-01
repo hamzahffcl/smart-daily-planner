@@ -199,6 +199,69 @@ export default function PomodoroTimer() {
     }
   }, [selectedTrack, isPlayingMusic]);
 
+  // Listen for external/hardware/system volume changes inside the audio tag
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleVolumeChange = () => {
+      setMusicVolume(audio.volume);
+    };
+
+    audio.addEventListener("volumechange", handleVolumeChange);
+    return () => {
+      audio.removeEventListener("volumechange", handleVolumeChange);
+    };
+  }, [selectedTrack]);
+
+  // Sync with OS Media Session API (Hardware media buttons & Lockscreen notification UI)
+  useEffect(() => {
+    if (typeof window === "undefined" || !("mediaSession" in navigator) || !audioRef.current || selectedTrack === "none") return;
+
+    const currentTrackObj = tracksList.find((t) => t.id === selectedTrack);
+    if (!currentTrackObj) return;
+
+    try {
+      const MediaMetadataClass = (window as any).MediaMetadata;
+      if (MediaMetadataClass) {
+        navigator.mediaSession.metadata = new MediaMetadataClass({
+          title: currentTrackObj.title,
+          artist: "Smart Daily Planner Lofi",
+          album: "Focus Mode Background Soundtrack",
+          artwork: [
+            {
+              src: "https://assets.mixkit.co/build/musics/music-generic-background4-c104016ec3f3b6fa24171be9402ae11a06f2db12c04b6c52cb4391ee655dd38b.png",
+              sizes: "512x512",
+              type: "image/png"
+            }
+          ]
+        });
+      }
+
+      // Map hardware keys and lockscreen controls
+      navigator.mediaSession.setActionHandler("play", () => {
+        setIsPlayingMusic(true);
+      });
+      navigator.mediaSession.setActionHandler("pause", () => {
+        setIsPlayingMusic(false);
+      });
+      navigator.mediaSession.setActionHandler("stop", () => {
+        setIsPlayingMusic(false);
+        setSelectedTrack("none");
+      });
+    } catch (error) {
+      console.warn("Media Session Metadata could not be initialized:", error);
+    }
+
+    return () => {
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("stop", null);
+      }
+    };
+  }, [selectedTrack, isPlayingMusic]);
+
   // Make sure we stop audio if component unmounts
   useEffect(() => {
     return () => {
