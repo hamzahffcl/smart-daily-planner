@@ -7,7 +7,7 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 
 export default function RealTimeClock() {
   const [time, setTime] = useState<Date | null>(null);
-  const { t } = useLanguageStore();
+  const { t, language } = useLanguageStore();
 
   useEffect(() => {
     setTime(new Date());
@@ -27,6 +27,22 @@ export default function RealTimeClock() {
     );
   }
 
+  const getFormattedDate = (date: Date) => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { dateStyle: "full" }).format(date);
+    } catch (e) {
+      return format(date, "EEEE, d MMMM yyyy");
+    }
+  };
+
   return (
     <div className="flex flex-col items-start md:items-end">
       <div className="flex items-center space-x-3">
@@ -38,8 +54,8 @@ export default function RealTimeClock() {
           {format(time, "HH:mm:ss")}
         </span>
       </div>
-      <span className="text-xs text-muted-foreground font-medium mt-0.5">
-        {format(time, "EEEE, d MMMM yyyy")}
+      <span className="text-xs text-muted-foreground font-medium mt-0.5 font-sans">
+        {getFormattedDate(time)}
       </span>
     </div>
   );

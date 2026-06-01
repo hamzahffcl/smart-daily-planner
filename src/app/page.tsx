@@ -76,6 +76,7 @@ export default function HomePage() {
   const [statusFilter, setStatusFilter] = useState<string>("incomplete");
 
   // Settings: Import/Export variables
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
   const [importStatus, setImportStatus] = useState<{ type: "success" | "error" | null; message: string }>({
     type: null,
     message: "",
@@ -121,21 +122,25 @@ export default function HomePage() {
 
   // Import state from JSON file
   const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileReader = new FileReader();
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      setSelectedFileName("");
+      return;
+    }
+    setSelectedFileName(files[0].name);
 
+    const fileReader = new FileReader();
     fileReader.onload = (event) => {
       const result = event.target?.result;
       if (typeof result === "string") {
         const success = importData(result);
         if (success) {
-          setImportStatus({ type: "success", message: "Data imported successfully! Page reloading..." });
+          setImportStatus({ type: "success", message: t('settings.importSuccess') });
           setTimeout(() => {
             window.location.reload();
           }, 1500);
         } else {
-          setImportStatus({ type: "error", message: "Failed to import. Please check file format." });
+          setImportStatus({ type: "error", message: t('settings.importError') });
         }
       }
     };
@@ -143,7 +148,7 @@ export default function HomePage() {
   };
 
   const handleResetData = () => {
-    if (confirm("Are you absolutely sure you want to reset all tasks, routines, stats and achievements? This cannot be undone.")) {
+    if (confirm(t('settings.resetConfirm'))) {
       resetAllData();
       window.location.reload();
     }
@@ -151,6 +156,22 @@ export default function HomePage() {
 
   const xpNeeded = level * 100;
   const xpPercent = Math.min(100, Math.round((xp / xpNeeded) * 100));
+
+  const getTodayLabel = () => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { weekday: "long", day: "numeric", month: "short" }).format(new Date());
+    } catch (e) {
+      return format(new Date(), "eeee, d MMM");
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -288,8 +309,8 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
                 <div>
                   <h2 className="text-xl font-bold tracking-tight">{t('dashboard.todaySchedule')}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t('dashboard.tasksScheduled')} ({format(new Date(), "eeee, d MMM")})
+                  <p className="text-xs text-muted-foreground mt-0.5 font-sans">
+                    {t('dashboard.tasksScheduled')} ({getTodayLabel()})
                   </p>
                 </div>
                 
@@ -418,12 +439,25 @@ export default function HomePage() {
                       {t('settings.importDesc')}
                     </p>
                     
-                    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                      <Input
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById("file-import-input")?.click()}
+                        className="font-semibold text-xs"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {t('settings.chooseFile')}
+                      </Button>
+                      <span className="text-xs text-muted-foreground truncate max-w-[200px] font-medium font-sans">
+                        {selectedFileName || t('settings.noFile')}
+                      </span>
+                      <input
+                        id="file-import-input"
                         type="file"
                         accept=".json"
                         onChange={handleImportData}
-                        className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/95 cursor-pointer"
+                        className="hidden"
                       />
                     </div>
 
