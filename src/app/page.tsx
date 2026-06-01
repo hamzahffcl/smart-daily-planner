@@ -309,7 +309,12 @@ export default function HomePage() {
                   {/* Priority Filter */}
                   <Select value={priorityFilter} onValueChange={(val) => setPriorityFilter(val || "all")}>
                     <SelectTrigger className="h-9 w-[120px] text-xs font-semibold">
-                      <SelectValue placeholder={t('dashboard.priority')} />
+                      <SelectValue placeholder={t('dashboard.priority')}>
+                        {priorityFilter === "all" ? t('filter.allPriority') : 
+                         priorityFilter === "High" ? t('filter.high') : 
+                         priorityFilter === "Medium" ? t('filter.medium') : 
+                         priorityFilter === "Low" ? t('filter.low') : ""}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-medium">{t('filter.allPriority')}</SelectItem>
@@ -322,7 +327,11 @@ export default function HomePage() {
                   {/* Status Filter */}
                   <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || "all")}>
                     <SelectTrigger className="h-9 w-[130px] text-xs font-semibold">
-                      <SelectValue placeholder={t('dashboard.status')} />
+                      <SelectValue placeholder={t('dashboard.status')}>
+                        {statusFilter === "all" ? t('filter.allStatus') : 
+                         statusFilter === "incomplete" ? t('filter.incomplete') : 
+                         statusFilter === "completed" ? t('filter.completed') : ""}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-medium">{t('filter.allStatus')}</SelectItem>

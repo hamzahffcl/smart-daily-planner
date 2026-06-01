@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePlannerStore } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,6 +18,7 @@ import { format } from "date-fns";
 export default function PomodoroTimer() {
   const tasks = usePlannerStore((state) => state.tasks);
   const completePomodoro = usePlannerStore((state) => state.completePomodoro);
+  const { t } = useLanguageStore();
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const todayTasks = tasks.filter((t) => t.dueDate === todayStr && !t.completed);
@@ -136,9 +138,9 @@ export default function PomodoroTimer() {
   return (
     <div className="flex flex-col items-center max-w-md mx-auto space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold tracking-tight">Focus Mode</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t('focus.title')}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Stay focused with Pomodoro and earn XP for your attention
+          {t('focus.subtitle')}
         </p>
       </div>
 
@@ -146,11 +148,11 @@ export default function PomodoroTimer() {
       <Card className="w-full bg-card/60 backdrop-blur-md border">
         <CardContent className="p-4 space-y-3">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-            Bind Focus to Today's Task
+            {t('focus.bindTask')}
           </label>
           <Select value={selectedTaskId} onValueChange={(val) => setSelectedTaskId(val || "")}>
             <SelectTrigger className="w-full font-medium">
-              <SelectValue placeholder="Select a task to focus on..." />
+              <SelectValue placeholder={t('focus.selectTask')} />
             </SelectTrigger>
             <SelectContent>
               {todayTasks.length > 0 ? (
@@ -161,7 +163,7 @@ export default function PomodoroTimer() {
                 ))
               ) : (
                 <SelectItem value="none" disabled>
-                  No tasks left today!
+                  {t('focus.noTasks')}
                 </SelectItem>
               )}
             </SelectContent>
@@ -169,7 +171,7 @@ export default function PomodoroTimer() {
           {selectedTask && (
             <div className="text-xs font-semibold text-primary/80 flex items-center gap-1.5 pl-1">
               <Flame className="h-3.5 w-3.5" />
-              Focusing on: <span className="underline">{selectedTask.title}</span> (+20 XP on completion)
+              {t('focus.focusingOn')} <span className="underline">{selectedTask.title}</span> {t('focus.xpBonus')}
             </div>
           )}
         </CardContent>
@@ -186,7 +188,7 @@ export default function PomodoroTimer() {
               )}
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
             </span>
-            {mode === "focus" ? "Focus Session" : "Short Break"}
+            {mode === "focus" ? t('focus.session') : t('focus.shortBreak')}
           </div>
 
           {/* SVG Countdown */}
@@ -217,7 +219,7 @@ export default function PomodoroTimer() {
                 {minutesStr}:{secondsStr}
               </span>
               <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
-                {mode === "focus" ? "Work Time" : "Break Time"}
+                {mode === "focus" ? t('focus.workTime') : t('focus.breakTime')}
               </span>
             </div>
           </div>
@@ -241,12 +243,12 @@ export default function PomodoroTimer() {
               {isActive ? (
                 <>
                   <Pause className="h-5 w-5 mr-2 fill-current" />
-                  Pause
+                  {t('focus.pause')}
                 </>
               ) : (
                 <>
                   <Play className="h-5 w-5 mr-2 fill-current" />
-                  Start
+                  {t('focus.start')}
                 </>
               )}
             </Button>
@@ -271,7 +273,7 @@ export default function PomodoroTimer() {
         className="text-[10px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5"
       >
         <BellRing className="h-3 w-3" />
-        Test Chime Sound
+        {t('focus.testSound')}
       </Button>
     </div>
   );

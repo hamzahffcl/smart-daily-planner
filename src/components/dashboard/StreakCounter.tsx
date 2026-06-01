@@ -1,17 +1,19 @@
 "use client";
 
 import { usePlannerStore } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { Flame } from "lucide-react";
 
 export default function StreakCounter() {
   const streak = usePlannerStore((state) => state.streak);
+  const { t } = useLanguageStore();
 
   // Determine motivational text and intensity of styling based on streak count
   const getMotivationalText = (count: number) => {
-    if (count === 0) return "Start a new streak today!";
-    if (count < 3) return "Great start! Keep going!";
-    if (count < 7) return "You're building momentum!";
-    return "Unstoppable! You're on fire!";
+    if (count === 0) return t('dashboard.streakCounter.msg0');
+    if (count < 3) return t('dashboard.streakCounter.msg1');
+    if (count < 7) return t('dashboard.streakCounter.msg2');
+    return t('dashboard.streakCounter.msg3');
   };
 
   const getFlameColorClass = (count: number) => {
@@ -24,7 +26,7 @@ export default function StreakCounter() {
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-card/60 backdrop-blur-md border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
       <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-        Daily Streak
+        {t('dashboard.streakCounter.title')}
       </h3>
 
       <div className="relative flex items-center justify-center mb-2">
@@ -40,7 +42,7 @@ export default function StreakCounter() {
 
       <div className="flex flex-col items-center text-center mt-2">
         <span className="text-3xl font-extrabold tracking-tight">
-          {streak} {streak === 1 ? "Day" : "Days"}
+          {streak} {streak === 1 ? t('dashboard.streakCounter.day') : t('dashboard.streakCounter.days')}
         </span>
         <p className="text-xs text-muted-foreground mt-2 font-medium max-w-[180px]">
           {getMotivationalText(streak)}

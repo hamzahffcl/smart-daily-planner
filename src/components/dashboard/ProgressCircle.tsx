@@ -1,10 +1,12 @@
 "use client";
 
 import { usePlannerStore } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { format } from "date-fns";
 
 export default function ProgressCircle() {
   const tasks = usePlannerStore((state) => state.tasks);
+  const { t } = useLanguageStore();
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
@@ -23,7 +25,7 @@ export default function ProgressCircle() {
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-card/60 backdrop-blur-md border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
       <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-        Daily Progress
+        {t('dashboard.progress.title')}
       </h3>
       
       <div className="relative flex items-center justify-center h-36 w-36">
@@ -58,19 +60,18 @@ export default function ProgressCircle() {
             {percentage}%
           </span>
           <span className="text-[10px] font-semibold text-muted-foreground uppercase mt-0.5">
-            Completed
+            {t('dashboard.progress.completed')}
           </span>
         </div>
       </div>
 
       <p className="text-sm text-center text-muted-foreground mt-4 font-medium">
         {total > 0 ? (
-          <>
-            Completed <span className="text-foreground font-bold">{completed}</span> of{" "}
-            <span className="text-foreground font-bold">{total}</span> tasks today
-          </>
+          <span dangerouslySetInnerHTML={{ 
+            __html: t('dashboard.progress.status', { completed, total }).replace(String(completed), `<span class="text-foreground font-bold">${completed}</span>`).replace(String(total), `<span class="text-foreground font-bold">${total}</span>`) 
+          }} />
         ) : (
-          "No tasks scheduled for today"
+          t('dashboard.progress.noTasks')
         )}
       </p>
     </div>

@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Clock } from "lucide-react";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 export default function RealTimeClock() {
   const [time, setTime] = useState<Date | null>(null);
+  const { t } = useLanguageStore();
 
   useEffect(() => {
     setTime(new Date());
@@ -20,7 +22,7 @@ export default function RealTimeClock() {
     return (
       <div className="flex items-center space-x-2 text-muted-foreground animate-pulse">
         <Clock className="h-5 w-5" />
-        <span className="text-sm font-medium">Loading time...</span>
+        <span className="text-sm font-medium">{t('dashboard.clock.loading')}</span>
       </div>
     );
   }
