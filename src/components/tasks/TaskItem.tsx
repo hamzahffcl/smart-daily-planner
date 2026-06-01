@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Task, usePlannerStore } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ interface TaskItemProps {
 }
 
 export default function TaskItem({ task }: TaskItemProps) {
+  const { t, language } = useLanguageStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
@@ -48,6 +50,22 @@ export default function TaskItem({ task }: TaskItemProps) {
   };
 
   const isOverdue = !task.completed && task.dueDate < format(new Date(), "yyyy-MM-dd");
+
+  const getFormattedDate = (dateStr: string) => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { day: "numeric", month: "short", year: "numeric" }).format(parseISO(dateStr));
+    } catch (e) {
+      return format(parseISO(dateStr), "d MMM yyyy");
+    }
+  };
 
   return (
     <>
@@ -79,7 +97,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                 
                 {/* Priority */}
                 <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded ${getPriorityColor(task.priority)}`}>
-                  {task.priority}
+                  {t(`filter.${task.priority.toLowerCase()}`)}
                 </Badge>
 
                 {/* Alarm Badge */}
@@ -94,7 +112,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                 {task.carryOverCount > 0 && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-500/15 text-orange-500 border-orange-500/30 flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
-                    Carried over {task.carryOverCount}x
+                    {t("task.carriedOver", { count: task.carryOverCount.toString() })}
                   </Badge>
                 )}
               </div>
@@ -103,12 +121,12 @@ export default function TaskItem({ task }: TaskItemProps) {
               <div className="flex items-center flex-wrap gap-3 text-xs text-muted-foreground mt-2">
                 <span className={`flex items-center space-x-1 font-medium ${isOverdue ? "text-destructive font-bold" : ""}`}>
                   <Calendar className="h-3.5 w-3.5" />
-                  <span>
+                  <span className="font-sans">
                     {isOverdue
-                      ? "Overdue: "
+                      ? `${t("task.overdue")}: ${getFormattedDate(task.dueDate)}`
                       : task.dueDate === format(new Date(), "yyyy-MM-dd")
-                      ? "Today"
-                      : format(parseISO(task.dueDate), "d MMM yyyy")}
+                      ? t("task.today")
+                      : getFormattedDate(task.dueDate)}
                   </span>
                 </span>
 
@@ -137,7 +155,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                     />
                   </div>
                   <span className="text-[10px] font-semibold text-muted-foreground font-mono">
-                    {completedSubtasks}/{totalSubtasks} Subtasks
+                    {t("task.subtasksCount", { completed: completedSubtasks.toString(), total: totalSubtasks.toString() })}
                   </span>
                 </div>
               )}
@@ -147,7 +165,8 @@ export default function TaskItem({ task }: TaskItemProps) {
                 <div className="mt-3 p-2 bg-destructive/5 border border-destructive/20 rounded-lg flex items-start space-x-2 text-xs text-destructive">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Smart Warning:</span> Delayed for {task.carryOverCount} days. Consider breaking this task down into subtasks or re-evaluating its importance.
+                    <span className="font-bold">{t("task.smartWarningTitle")} </span>
+                    {t("task.smartWarningDesc", { count: task.carryOverCount.toString() })}
                   </div>
                 </div>
               )}
@@ -190,7 +209,7 @@ export default function TaskItem({ task }: TaskItemProps) {
               {/* Notes */}
               {task.notes && (
                 <div className="text-xs text-muted-foreground bg-muted/20 p-2.5 rounded-lg border border-muted/30">
-                  <span className="font-semibold text-foreground block mb-1">Notes</span>
+                  <span className="font-semibold text-foreground block mb-1">{t("task.notes")}</span>
                   <p className="whitespace-pre-wrap leading-relaxed">{task.notes}</p>
                 </div>
               )}
@@ -198,7 +217,7 @@ export default function TaskItem({ task }: TaskItemProps) {
               {/* Subtask list */}
               {totalSubtasks > 0 && (
                 <div>
-                  <span className="text-xs font-semibold text-foreground block mb-2">Subtasks Checklist</span>
+                  <span className="text-xs font-semibold text-foreground block mb-2">{t("task.subtasks")}</span>
                   <div className="space-y-2">
                     {task.subtasks.map((subtask) => (
                       <div key={subtask.id} className="flex items-center space-x-2 pl-1.5">

@@ -1,19 +1,20 @@
 "use client";
 
 import { usePlannerStore } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   format,
   subDays,
   parseISO,
   eachDayOfInterval,
-  isSameDay,
   startOfWeek,
   endOfWeek,
 } from "date-fns";
 import { CheckCircle2, AlertCircle, Timer, Award } from "lucide-react";
 
 export default function StatsPanel() {
+  const { t, language } = useLanguageStore();
   const tasks = usePlannerStore((state) => state.tasks);
   const pomodorosCompleted = usePlannerStore((state) => state.pomodorosCompleted);
 
@@ -71,12 +72,63 @@ export default function StatsPanel() {
 
   // 3. 7-Day Completion Bar Chart (SVG-based)
   const last7Days = Array.from({ length: 7 }, (_, i) => subDays(today, 6 - i));
+  
+  const getDayLabel = (day: Date) => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { weekday: "short" }).format(day);
+    } catch (e) {
+      return format(day, "EEE");
+    }
+  };
+
+  const getDateLabel = (day: Date) => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { day: "numeric" }).format(day);
+    } catch (e) {
+      return format(day, "d");
+    }
+  };
+
+  const getHeatmapTooltip = (day: Date, count: number) => {
+    let dateStr = "";
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      dateStr = new Intl.DateTimeFormat(localeMap[language] || "en-US", { dateStyle: "full" }).format(day);
+    } catch (e) {
+      dateStr = format(day, "EEEE, d MMM yyyy");
+    }
+    return t("stats.heatmap.tooltip", { date: dateStr, count: count.toString() });
+  };
+
   const chartData = last7Days.map((day) => {
     const formatted = format(day, "yyyy-MM-dd");
     const count = completedTaskDates.filter((d) => d === formatted).length;
     return {
-      label: format(day, "EEE"),
-      date: format(day, "d MMM"),
+      label: getDayLabel(day),
+      date: getDateLabel(day),
       count,
     };
   });
@@ -87,9 +139,9 @@ export default function StatsPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold tracking-tight">Performance Statistics</h2>
+        <h2 className="text-xl font-bold tracking-tight">{t("stats.title")}</h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Track your completion rates, consistencies, and focus sessions
+          {t("stats.subtitle")}
         </p>
       </div>
 
@@ -102,7 +154,7 @@ export default function StatsPanel() {
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Completed Tasks
+                {t("stats.completedTasks")}
               </span>
               <span className="text-2xl font-extrabold tracking-tight">
                 {totalCompleted}
@@ -118,7 +170,7 @@ export default function StatsPanel() {
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Completion Rate
+                {t("stats.completionRate")}
               </span>
               <span className="text-2xl font-extrabold tracking-tight">
                 {completionRate}%
@@ -134,7 +186,7 @@ export default function StatsPanel() {
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Focus Sessions
+                {t("stats.focusSessions")}
               </span>
               <span className="text-2xl font-extrabold tracking-tight">
                 {pomodorosCompleted}
@@ -150,7 +202,7 @@ export default function StatsPanel() {
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Total Carry Overs
+                {t("stats.totalCarryOvers")}
               </span>
               <span className="text-2xl font-extrabold tracking-tight">
                 {totalCarriedCount}
@@ -165,7 +217,7 @@ export default function StatsPanel() {
         <Card className="bg-card/60 backdrop-blur-md border md:col-span-2">
           <CardContent className="p-6">
             <h3 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground mb-6">
-              Activity Heatmap (Last 12 Weeks)
+              {t("stats.heatmapTitle")}
             </h3>
             
             <div className="flex flex-col items-center overflow-x-auto w-full pb-2">
@@ -180,7 +232,7 @@ export default function StatsPanel() {
                       return (
                         <div
                           key={dIdx}
-                          title={`${format(day, "EEEE, d MMM yyyy")}: ${count} task(s) completed`}
+                          title={getHeatmapTooltip(day, count)}
                           className={`h-4 w-4 rounded-[3px] border transition-all duration-300 ${
                             isOutOfRange
                               ? "bg-transparent border-transparent pointer-events-none"
@@ -195,12 +247,12 @@ export default function StatsPanel() {
 
               {/* Heatmap Legend */}
               <div className="flex justify-end items-center space-x-2 w-full mt-4 text-[10px] font-medium text-muted-foreground pr-4">
-                <span>Less</span>
+                <span>{t("stats.less")}</span>
                 <div className="h-3 w-3 rounded-[2px] bg-muted/30 border border-muted/10" />
                 <div className="h-3 w-3 rounded-[2px] bg-primary/20 border border-primary/20" />
                 <div className="h-3 w-3 rounded-[2px] bg-primary/50 border border-primary/35" />
                 <div className="h-3 w-3 rounded-[2px] bg-primary border border-primary/50" />
-                <span>More</span>
+                <span>{t("stats.more")}</span>
               </div>
             </div>
           </CardContent>
@@ -210,7 +262,7 @@ export default function StatsPanel() {
         <Card className="bg-card/60 backdrop-blur-md border">
           <CardContent className="p-6">
             <h3 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground mb-6">
-              Weekly Completion History
+              {t("stats.weeklyHistory")}
             </h3>
             
             {/* SVG Bar Chart */}
@@ -241,7 +293,7 @@ export default function StatsPanel() {
               {chartData.map((data, idx) => (
                 <div key={idx} className="flex flex-col items-center flex-1 text-center font-sans">
                   <span>{data.label}</span>
-                  <span className="text-[8px] font-normal text-muted-foreground/75 mt-0.5">{data.date.split(" ")[0]}</span>
+                  <span className="text-[8px] font-normal text-muted-foreground/75 mt-0.5">{data.date}</span>
                 </div>
               ))}
             </div>

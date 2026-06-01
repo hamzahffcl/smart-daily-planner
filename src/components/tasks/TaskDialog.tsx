@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePlannerStore, Task } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ interface TaskDialogProps {
 }
 
 export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps) {
+  const { t } = useLanguageStore();
   const addTask = usePlannerStore((state) => state.addTask);
   const updateTask = usePlannerStore((state) => state.updateTask);
 
@@ -117,7 +119,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
       <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight">
-            {task ? "Edit Task" : "Create New Task"}
+            {task ? t("task.edit") : t("task.create")}
           </DialogTitle>
         </DialogHeader>
 
@@ -125,11 +127,11 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
           {/* Title */}
           <div className="space-y-1.5">
             <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Task Title <span className="text-destructive">*</span>
+              {t("task.titleLabel")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="title"
-              placeholder="e.g. Complete quarterly business report"
+              placeholder={t("task.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -141,19 +143,21 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
             {/* Priority */}
             <div className="space-y-1.5">
               <Label htmlFor="priority" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Priority
+                {t("dashboard.priority")}
               </Label>
               <Select
                 value={priority}
                 onValueChange={(val) => setPriority(val as Task["priority"])}
               >
                 <SelectTrigger id="priority" className="font-medium">
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder={t("task.selectPriority")}>
+                    {priority ? t(`filter.${priority.toLowerCase()}`) : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="High" className="text-destructive font-semibold">High</SelectItem>
-                  <SelectItem value="Medium" className="text-amber-500 font-semibold">Medium</SelectItem>
-                  <SelectItem value="Low" className="text-emerald-500 font-semibold">Low</SelectItem>
+                  <SelectItem value="High" className="text-destructive font-semibold">{t("filter.high")}</SelectItem>
+                  <SelectItem value="Medium" className="text-amber-500 font-semibold">{t("filter.medium")}</SelectItem>
+                  <SelectItem value="Low" className="text-emerald-500 font-semibold">{t("filter.low")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -161,7 +165,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
             {/* Due Date */}
             <div className="space-y-1.5">
               <Label htmlFor="dueDate" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Due Date
+                {t("task.dueDateLabel")}
               </Label>
               <Input
                 id="dueDate"
@@ -178,7 +182,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
             {/* Alarm Time */}
             <div className="space-y-1.5">
               <Label htmlFor="alarmTime" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                Alarm (Optional)
+                {t("task.alarmLabel")}
               </Label>
               <Input
                 id="alarmTime"
@@ -192,11 +196,11 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
             {/* Tags */}
             <div className="space-y-1.5">
               <Label htmlFor="tags" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Tags (Comma separated)
+                {t("task.tagsLabel")}
               </Label>
               <Input
                 id="tags"
-                placeholder="e.g. Work, Personal"
+                placeholder={t("task.tagsPlaceholder")}
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
               />
@@ -206,11 +210,11 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
           {/* Notes */}
           <div className="space-y-1.5">
             <Label htmlFor="notes" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Notes / Description
+              {t("task.notesLabel")}
             </Label>
             <Textarea
               id="notes"
-              placeholder="Add details, instructions, or hyperlinks..."
+              placeholder={t("task.notesPlaceholder")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -222,7 +226,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
           <div className="space-y-1.5 border-t pt-3">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <ListTodo className="h-4 w-4" />
-              Subtasks Checklist ({subtasks.length})
+              {t("task.subtasksChecklist", { count: subtasks.length.toString() })}
             </Label>
             
             {/* Subtask list */}
@@ -248,7 +252,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
             {/* Add subtask inputs */}
             <div className="flex gap-2">
               <Input
-                placeholder="Add subtask title..."
+                placeholder={t("task.subtaskPlaceholder")}
                 value={newSubtaskTitle}
                 onChange={(e) => setNewSubtaskTitle(e.target.value)}
                 onKeyDown={(e) => {
@@ -267,7 +271,7 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
                 className="h-9 px-3 shrink-0"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add
+                {t("app.add")}
               </Button>
             </div>
           </div>
@@ -278,10 +282,10 @@ export default function TaskDialog({ task, open, onOpenChange }: TaskDialogProps
               variant="ghost"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("app.cancel")}
             </Button>
             <Button type="submit" className="font-semibold px-6">
-              {task ? "Save Changes" : "Create Task"}
+              {task ? t("task.saveChanges") : t("task.createTask")}
             </Button>
           </DialogFooter>
         </form>

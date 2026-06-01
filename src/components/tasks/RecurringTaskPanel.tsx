@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePlannerStore, RecurringTemplate } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Trash2, RefreshCw, CalendarDays, Tag } from "lucide-react";
 
 export default function RecurringTaskPanel() {
+  const { t, language } = useLanguageStore();
   const recurringTemplates = usePlannerStore((state) => state.recurringTemplates);
   const addRecurringTemplate = usePlannerStore((state) => state.addRecurringTemplate);
   const updateRecurringTemplate = usePlannerStore((state) => state.updateRecurringTemplate);
@@ -82,20 +84,36 @@ export default function RecurringTaskPanel() {
     }
   };
 
+  const getFormattedDate = (dateStr: string) => {
+    try {
+      const localeMap: Record<string, string> = {
+        en: "en-US",
+        id: "id-ID",
+        ja: "ja-JP",
+        ar: "ar-EG",
+        zh: "zh-CN",
+        ko: "ko-KR",
+      };
+      return new Intl.DateTimeFormat(localeMap[language] || "en-US", { dateStyle: "medium" }).format(new Date(dateStr));
+    } catch (e) {
+      return new Date(dateStr).toLocaleDateString();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Recurring Tasks</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t("routines.title")}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Define habits and routines that generate tasks automatically
+            {t("routines.subtitle")}
           </p>
         </div>
 
         {/* Add Routine Button */}
         <Button onClick={() => setIsDialogOpen(true)} className="font-semibold shadow-sm">
           <Plus className="h-4 w-4 mr-2" />
-          Add Routine
+          {t("routines.newRoutine")}
         </Button>
 
         {/* Add Template Dialog */}
@@ -103,18 +121,18 @@ export default function RecurringTaskPanel() {
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight">
-                Add Recurring Task Template
+                {t("routines.addTemplateTitle")}
               </DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4 py-2">
               <div className="space-y-1.5">
                 <Label htmlFor="rec-title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Task Title <span className="text-destructive">*</span>
+                  {t("routines.taskTitle")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="rec-title"
-                  placeholder="e.g. Morning Meditation"
+                  placeholder={t("routines.titlePlaceholder")}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -125,38 +143,42 @@ export default function RecurringTaskPanel() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="rec-frequency" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Frequency
+                    {t("routines.frequency")}
                   </Label>
                   <Select
                     value={frequency}
                     onValueChange={(val) => setFrequency(val as RecurringTemplate["frequency"])}
                   >
                     <SelectTrigger id="rec-frequency" className="font-medium">
-                      <SelectValue placeholder="Select Frequency" />
+                      <SelectValue placeholder={t("routines.selectFrequency")}>
+                        {frequency ? t(`routines.${frequency.toLowerCase()}`) : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Daily" className="font-medium text-violet-500">Daily</SelectItem>
-                      <SelectItem value="Weekly" className="font-medium text-indigo-500">Weekly</SelectItem>
-                      <SelectItem value="Monthly" className="font-medium text-blue-500">Monthly</SelectItem>
+                      <SelectItem value="Daily" className="font-medium text-violet-500">{t("routines.daily")}</SelectItem>
+                      <SelectItem value="Weekly" className="font-medium text-indigo-500">{t("routines.weekly")}</SelectItem>
+                      <SelectItem value="Monthly" className="font-medium text-blue-500">{t("routines.monthly")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="rec-priority" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Priority
+                    {t("dashboard.priority")}
                   </Label>
                   <Select
                     value={priority}
                     onValueChange={(val) => setPriority(val as RecurringTemplate["priority"])}
                   >
                     <SelectTrigger id="rec-priority" className="font-medium">
-                      <SelectValue placeholder="Select priority" />
+                      <SelectValue placeholder={t("routines.selectPriority")}>
+                        {priority ? t(`filter.${priority.toLowerCase()}`) : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="High" className="text-destructive font-semibold">High</SelectItem>
-                      <SelectItem value="Medium" className="text-amber-500 font-semibold">Medium</SelectItem>
-                      <SelectItem value="Low" className="text-emerald-500 font-semibold">Low</SelectItem>
+                      <SelectItem value="High" className="text-destructive font-semibold">{t("filter.high")}</SelectItem>
+                      <SelectItem value="Medium" className="text-amber-500 font-semibold">{t("filter.medium")}</SelectItem>
+                      <SelectItem value="Low" className="text-emerald-500 font-semibold">{t("filter.low")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -164,11 +186,11 @@ export default function RecurringTaskPanel() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="rec-tags" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tags (Comma separated)
+                  {t("routines.tagsLabel")}
                 </Label>
                 <Input
                   id="rec-tags"
-                  placeholder="e.g. Health, Habit, Work"
+                  placeholder={t("routines.tagsPlaceholder")}
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                 />
@@ -176,11 +198,11 @@ export default function RecurringTaskPanel() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="rec-notes" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Notes
+                  {t("task.notes")}
                 </Label>
                 <Textarea
                   id="rec-notes"
-                  placeholder="Add notes for the auto-generated tasks..."
+                  placeholder={t("routines.notesPlaceholder")}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
@@ -194,10 +216,10 @@ export default function RecurringTaskPanel() {
                   variant="ghost"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  Cancel
+                  {t("app.cancel")}
                 </Button>
                 <Button type="submit" className="font-semibold px-6">
-                  Save Template
+                  {t("routines.saveTemplate")}
                 </Button>
               </div>
             </form>
@@ -223,10 +245,10 @@ export default function RecurringTaskPanel() {
                     </span>
                     <Badge variant="outline" className={`text-[10px] px-1.5 rounded ${getFrequencyBadgeColor(template.frequency)}`}>
                       <RefreshCw className="h-2.5 w-2.5 mr-1 animate-spin-slow" />
-                      {template.frequency}
+                      {t(`routines.${template.frequency.toLowerCase()}`)}
                     </Badge>
                     <Badge variant="outline" className={`text-[10px] px-1.5 rounded ${getPriorityColor(template.priority)}`}>
-                      {template.priority}
+                      {t(`filter.${template.priority.toLowerCase()}`)}
                     </Badge>
                   </div>
 
@@ -237,9 +259,9 @@ export default function RecurringTaskPanel() {
                   )}
 
                   <div className="flex items-center flex-wrap gap-2 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-sans">
                       <CalendarDays className="h-3 w-3" />
-                      Created {new Date(template.createdAt).toLocaleDateString()}
+                      {t("routines.createdDate", { date: getFormattedDate(template.createdAt) })}
                     </span>
                     {template.tags.length > 0 && (
                       <span className="flex items-center gap-1.5 flex-wrap">
@@ -282,9 +304,9 @@ export default function RecurringTaskPanel() {
       ) : (
         <div className="flex flex-col items-center justify-center p-8 bg-muted/20 border border-dashed rounded-2xl text-center">
           <RefreshCw className="h-8 w-8 text-muted-foreground/60 mb-2" />
-          <p className="text-sm font-semibold text-muted-foreground">No recurring routines created yet</p>
+          <p className="text-sm font-semibold text-muted-foreground">{t("routines.noRoutines")}</p>
           <p className="text-xs text-muted-foreground/70 mt-1 max-w-[280px]">
-            Add task templates (like morning exercises or coding practice) that you want to do regularly.
+            {t("routines.noRoutinesHint")}
           </p>
         </div>
       )}
