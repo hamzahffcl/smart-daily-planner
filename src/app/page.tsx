@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { usePlannerStore, Task } from "@/store/usePlannerStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
+import { Language } from "@/lib/i18n/translations";
 import { useTheme } from "next-themes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,6 +51,7 @@ import GamificationPanel from "@/components/gamification/GamificationPanel";
 
 export default function HomePage() {
   const { theme, setTheme } = useTheme();
+  const { t, language, setLanguage } = useLanguageStore();
   const runDailyMaintenance = usePlannerStore((state) => state.runDailyMaintenance);
   const tasks = usePlannerStore((state) => state.tasks);
   const level = usePlannerStore((state) => state.level);
@@ -166,14 +169,14 @@ export default function HomePage() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-extrabold tracking-tight">Smart Daily Planner</h1>
+                <h1 className="text-lg font-extrabold tracking-tight">{t('app.title')}</h1>
                 <Sparkles className="h-4 w-4 text-primary animate-pulse" />
               </div>
               
               {/* Header XP bar */}
               <div className="flex items-center space-x-3 mt-1.5">
                 <Badge variant="outline" className="text-[10px] font-bold py-0.5 px-2 bg-primary/10 text-primary rounded-full border-primary/20">
-                  Lvl {level}
+                  {t('app.level')} {level}
                 </Badge>
                 <div className="w-32 bg-muted h-2 rounded-full overflow-hidden shadow-inner">
                   <div
@@ -182,15 +185,30 @@ export default function HomePage() {
                   />
                 </div>
                 <span className="text-xs font-bold text-muted-foreground font-mono">
-                  {xp} / {xpNeeded} XP
+                  {xp} / {xpNeeded} {t('app.xp')}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-0 pt-3 md:pt-0">
+          <div className="flex items-center justify-between md:justify-end gap-3 border-t md:border-0 pt-3 md:pt-0">
             {/* Real-time Clock */}
             <RealTimeClock />
+
+            {/* Language Selector */}
+            <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
+              <SelectTrigger className="h-10 w-[125px] rounded-full border-muted text-xs font-semibold" aria-label={t('lang.toggle')}>
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">🇺🇸 English</SelectItem>
+                <SelectItem value="id">🇮🇩 Indonesia</SelectItem>
+                <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                <SelectItem value="ar">🇸🇦 العربية</SelectItem>
+                <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Theme Toggle Button */}
             <Button
@@ -198,10 +216,11 @@ export default function HomePage() {
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="h-10 w-10 rounded-full shrink-0 border-muted"
+              title={t('theme.toggle')}
             >
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-primary" />
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-primary" />
-              <span className="sr-only">Toggle theme</span>
+              <span className="sr-only">{t('theme.toggle')}</span>
             </Button>
           </div>
         </header>
@@ -212,27 +231,27 @@ export default function HomePage() {
             <TabsList className="inline-flex h-auto p-1.5 bg-card/60 backdrop-blur-md border rounded-full w-max min-w-full md:min-w-0">
               <TabsTrigger value="dashboard" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
-                <span>Dashboard</span>
+                <span>{t('tabs.dashboard')}</span>
               </TabsTrigger>
               <TabsTrigger value="focus" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <Timer className="h-4 w-4 shrink-0" />
-                <span>Focus Mode</span>
+                <span>{t('tabs.focus')}</span>
               </TabsTrigger>
               <TabsTrigger value="routines" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <RefreshCw className="h-4 w-4 shrink-0" />
-                <span>Routines</span>
+                <span>{t('tabs.routines')}</span>
               </TabsTrigger>
               <TabsTrigger value="stats" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <BarChart3 className="h-4 w-4 shrink-0" />
-                <span>Statistics</span>
+                <span>{t('tabs.stats')}</span>
               </TabsTrigger>
               <TabsTrigger value="gamification" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <Award className="h-4 w-4 shrink-0" />
-                <span>Rankings</span>
+                <span>{t('tabs.rankings')}</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
                 <SettingsIcon className="h-4 w-4 shrink-0" />
-                <span>Settings</span>
+                <span>{t('tabs.settings')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -248,17 +267,17 @@ export default function HomePage() {
               <Card className="bg-card/60 backdrop-blur-md border p-6 flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Daily Focus
+                    {t('dashboard.dailyFocus')}
                   </h3>
                   <p className="text-sm italic font-medium text-foreground/90 leading-relaxed">
-                    "Productivity is never an accident. It is always the result of a commitment to excellence, intelligent planning, and focused effort."
+                    {t('dashboard.quote')}
                   </p>
                 </div>
                 <div className="flex items-center justify-between border-t pt-3 mt-4 text-[10px] text-muted-foreground font-bold uppercase tracking-wide">
-                  <span>Level {level} Planner</span>
+                  <span>{t('dashboard.plannerLevel', { level })}</span>
                   <span className="flex items-center gap-1">
                     <Flame className="h-3 w-3 text-orange-500" />
-                    {streak} Day Streak
+                    {t('dashboard.streak', { streak })}
                   </span>
                 </div>
               </Card>
@@ -268,9 +287,9 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight">Today's Schedule</h2>
+                  <h2 className="text-xl font-bold tracking-tight">{t('dashboard.todaySchedule')}</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Tasks scheduled for today ({format(new Date(), "eeee, d MMM")})
+                    {t('dashboard.tasksScheduled')} ({format(new Date(), "eeee, d MMM")})
                   </p>
                 </div>
                 
@@ -280,7 +299,7 @@ export default function HomePage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search tasks or tags..."
+                      placeholder={t('dashboard.searchPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9 h-9 w-[180px] text-xs"
@@ -290,32 +309,32 @@ export default function HomePage() {
                   {/* Priority Filter */}
                   <Select value={priorityFilter} onValueChange={(val) => setPriorityFilter(val || "all")}>
                     <SelectTrigger className="h-9 w-[120px] text-xs font-semibold">
-                      <SelectValue placeholder="Priority" />
+                      <SelectValue placeholder={t('dashboard.priority')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all" className="text-xs font-medium">All Priority</SelectItem>
-                      <SelectItem value="High" className="text-xs font-semibold text-destructive">High</SelectItem>
-                      <SelectItem value="Medium" className="text-xs font-semibold text-amber-500">Medium</SelectItem>
-                      <SelectItem value="Low" className="text-xs font-semibold text-emerald-500">Low</SelectItem>
+                      <SelectItem value="all" className="text-xs font-medium">{t('filter.allPriority')}</SelectItem>
+                      <SelectItem value="High" className="text-xs font-semibold text-destructive">{t('filter.high')}</SelectItem>
+                      <SelectItem value="Medium" className="text-xs font-semibold text-amber-500">{t('filter.medium')}</SelectItem>
+                      <SelectItem value="Low" className="text-xs font-semibold text-emerald-500">{t('filter.low')}</SelectItem>
                     </SelectContent>
                   </Select>
 
                   {/* Status Filter */}
                   <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || "all")}>
                     <SelectTrigger className="h-9 w-[130px] text-xs font-semibold">
-                      <SelectValue placeholder="Status" />
+                      <SelectValue placeholder={t('dashboard.status')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all" className="text-xs font-medium">All Status</SelectItem>
-                      <SelectItem value="incomplete" className="text-xs font-semibold">Incomplete</SelectItem>
-                      <SelectItem value="completed" className="text-xs font-semibold">Completed</SelectItem>
+                      <SelectItem value="all" className="text-xs font-medium">{t('filter.allStatus')}</SelectItem>
+                      <SelectItem value="incomplete" className="text-xs font-semibold">{t('filter.incomplete')}</SelectItem>
+                      <SelectItem value="completed" className="text-xs font-semibold">{t('filter.completed')}</SelectItem>
                     </SelectContent>
                   </Select>
 
                   {/* Create Task Button */}
                   <Button onClick={() => setIsTaskDialogOpen(true)} className="h-9 font-semibold shadow-sm text-xs">
                     <Plus className="h-4 w-4 mr-1.5" />
-                    New Task
+                    {t('dashboard.newTask')}
                   </Button>
                 </div>
               </div>
@@ -330,9 +349,9 @@ export default function HomePage() {
               ) : (
                 <div className="flex flex-col items-center justify-center p-12 bg-muted/20 border border-dashed rounded-2xl text-center">
                   <ListTodo className="h-10 w-10 text-muted-foreground/60 mb-2" />
-                  <p className="text-sm font-semibold text-muted-foreground">No tasks match your filter criteria</p>
+                  <p className="text-sm font-semibold text-muted-foreground">{t('dashboard.noTasks')}</p>
                   <p className="text-xs text-muted-foreground/75 mt-1">
-                    Try adjusting your search query, priority selector, or create a brand new task.
+                    {t('dashboard.noTasksHint')}
                   </p>
                 </div>
               )}
@@ -363,9 +382,9 @@ export default function HomePage() {
           <TabsContent value="settings" className="outline-none">
             <div className="max-w-xl mx-auto space-y-6">
               <div>
-                <h2 className="text-xl font-bold tracking-tight">Planner Settings</h2>
+                <h2 className="text-xl font-bold tracking-tight">{t('settings.title')}</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Backup your planner profile or restore previous configuration
+                  {t('settings.subtitle')}
                 </p>
               </div>
 
@@ -373,21 +392,21 @@ export default function HomePage() {
                 <CardContent className="p-6 space-y-6">
                   {/* Backup Section */}
                   <div className="space-y-3 pb-6 border-b">
-                    <h3 className="text-sm font-bold tracking-tight">Export Data</h3>
+                    <h3 className="text-sm font-bold tracking-tight">{t('settings.export')}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Download all your planner data including completed tasks, habits, streaks, level status, and achievements as a `.json` backup file.
+                      {t('settings.exportDesc')}
                     </p>
                     <Button onClick={handleExportData} className="w-full sm:w-auto font-semibold">
                       <Download className="h-4 w-4 mr-2" />
-                      Download Backup
+                      {t('settings.downloadBtn')}
                     </Button>
                   </div>
 
                   {/* Restore Section */}
                   <div className="space-y-3 pb-6 border-b">
-                    <h3 className="text-sm font-bold tracking-tight">Import Data</h3>
+                    <h3 className="text-sm font-bold tracking-tight">{t('settings.import')}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Restore your planner profile from a previous `.json` backup file. This will overwrite all your current local planner data.
+                      {t('settings.importDesc')}
                     </p>
                     
                     <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -413,13 +432,13 @@ export default function HomePage() {
 
                   {/* Reset Section */}
                   <div className="space-y-3">
-                    <h3 className="text-sm font-bold tracking-tight text-destructive">Danger Zone</h3>
+                    <h3 className="text-sm font-bold tracking-tight text-destructive">{t('settings.danger')}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Wipe all data from this device. All completed tasks, streaks, level progression, and routines will be deleted forever.
+                      {t('settings.dangerDesc')}
                     </p>
                     <Button onClick={handleResetData} variant="destructive" className="w-full sm:w-auto font-semibold">
                       <RotateCcw className="h-4 w-4 mr-2" />
-                      Reset All Data
+                      {t('settings.resetBtn')}
                     </Button>
                   </div>
                 </CardContent>
