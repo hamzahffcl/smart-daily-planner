@@ -171,18 +171,18 @@ export default function HomePage() {
               </div>
               
               {/* Header XP bar */}
-              <div className="flex items-center space-x-2 mt-1 min-w-[180px]">
-                <Badge variant="outline" className="text-[9px] font-bold py-0 px-1 bg-primary/10 text-primary">
+              <div className="flex items-center space-x-3 mt-1.5">
+                <Badge variant="outline" className="text-[10px] font-bold py-0.5 px-2 bg-primary/10 text-primary rounded-full border-primary/20">
                   Lvl {level}
                 </Badge>
-                <div className="w-24 bg-muted h-1.5 rounded-full overflow-hidden">
+                <div className="w-32 bg-muted h-2 rounded-full overflow-hidden shadow-inner">
                   <div
-                    className="bg-primary h-full transition-all duration-300"
+                    className="bg-primary h-full transition-all duration-500 ease-out"
                     style={{ width: `${xpPercent}%` }}
                   />
                 </div>
-                <span className="text-[9px] font-bold text-muted-foreground font-mono">
-                  {xp}/{xpNeeded} XP
+                <span className="text-xs font-bold text-muted-foreground font-mono">
+                  {xp} / {xpNeeded} XP
                 </span>
               </div>
             </div>
@@ -208,32 +208,34 @@ export default function HomePage() {
 
         {/* TABS CONTAINER */}
         <Tabs defaultValue="dashboard" className="flex-1 flex flex-col space-y-6">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1.5 bg-card/45 backdrop-blur-md border rounded-2xl md:max-w-2xl">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <LayoutDashboard className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="focus" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <Timer className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Focus Mode</span>
-            </TabsTrigger>
-            <TabsTrigger value="routines" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <RefreshCw className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Routines</span>
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <BarChart3 className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Statistics</span>
-            </TabsTrigger>
-            <TabsTrigger value="gamification" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <Award className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Rankings</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-1.5 text-xs font-bold py-2 rounded-xl">
-              <SettingsIcon className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Settings</span>
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-2 -mb-2 hide-scrollbar">
+            <TabsList className="inline-flex h-auto p-1.5 bg-card/60 backdrop-blur-md border rounded-full w-max min-w-full md:min-w-0">
+              <TabsTrigger value="dashboard" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                <span>Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="focus" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <Timer className="h-4 w-4 shrink-0" />
+                <span>Focus Mode</span>
+              </TabsTrigger>
+              <TabsTrigger value="routines" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                <span>Routines</span>
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <BarChart3 className="h-4 w-4 shrink-0" />
+                <span>Statistics</span>
+              </TabsTrigger>
+              <TabsTrigger value="gamification" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <Award className="h-4 w-4 shrink-0" />
+                <span>Rankings</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+                <SettingsIcon className="h-4 w-4 shrink-0" />
+                <span>Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* TAB CONTENT: DASHBOARD */}
           <TabsContent value="dashboard" className="space-y-6 outline-none flex-1">
