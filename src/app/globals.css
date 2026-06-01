@@ -187,4 +187,75 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Lofi Girl Animations */
+  @keyframes lofi-head-bob {
+    0%, 100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(3deg) translateY(0.5px);
+    }
+  }
+
+  @keyframes lofi-steam {
+    0% {
+      transform: translateY(0) scaleX(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translateY(-3px) scaleX(1.2);
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(-6px) scaleX(0.8);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lofi-note-float-1 {
+    0% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-10px, -20px) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lofi-note-float-2 {
+    0% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(10px, -25px) scale(0.9);
+      opacity: 0;
+    }
+  }
+
+  .animate-lofi-head {
+    transform-origin: 70px 82px;
+    animation: lofi-head-bob 2.5s infinite ease-in-out;
+  }
+
+  .animate-lofi-steam {
+    transform-origin: center bottom;
+    animation: lofi-steam 2s infinite linear;
+  }
+
+  .animate-lofi-note-1 {
+    animation: lofi-note-float-1 3s infinite linear;
+  }
+
+  .animate-lofi-note-2 {
+    animation: lofi-note-float-2 3.5s infinite linear 1.2s;
+  }
 }
