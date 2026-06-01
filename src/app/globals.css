@@ -117,6 +117,56 @@
   --sidebar-ring: oklch(0.68 0.16 260 / 30%);
 }
 
+/* Custom Themes */
+
+/* Emerald */
+.theme-emerald {
+  --primary: oklch(0.55 0.16 160);
+  --ring: oklch(0.55 0.16 160 / 50%);
+  --chart-1: oklch(0.55 0.16 160);
+}
+.dark.theme-emerald {
+  --primary: oklch(0.68 0.14 160);
+  --ring: oklch(0.68 0.14 160 / 30%);
+  --chart-1: oklch(0.68 0.14 160);
+}
+
+/* Rose */
+.theme-rose {
+  --primary: oklch(0.55 0.18 350);
+  --ring: oklch(0.55 0.18 350 / 50%);
+  --chart-1: oklch(0.55 0.18 350);
+}
+.dark.theme-rose {
+  --primary: oklch(0.68 0.16 350);
+  --ring: oklch(0.68 0.16 350 / 30%);
+  --chart-1: oklch(0.68 0.16 350);
+}
+
+/* Amber */
+.theme-amber {
+  --primary: oklch(0.65 0.18 75);
+  --ring: oklch(0.65 0.18 75 / 50%);
+  --chart-1: oklch(0.65 0.18 75);
+}
+.dark.theme-amber {
+  --primary: oklch(0.75 0.16 75);
+  --ring: oklch(0.75 0.16 75 / 30%);
+  --chart-1: oklch(0.75 0.16 75);
+}
+
+/* Slate */
+.theme-slate {
+  --primary: oklch(0.55 0.02 240);
+  --ring: oklch(0.55 0.02 240 / 50%);
+  --chart-1: oklch(0.55 0.02 240);
+}
+.dark.theme-slate {
+  --primary: oklch(0.68 0.02 240);
+  --ring: oklch(0.68 0.02 240 / 30%);
+  --chart-1: oklch(0.68 0.02 240);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -136,5 +186,31 @@
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Textures */
+  .texture-grid {
+    background-image: 
+      linear-gradient(var(--border) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
+    background-size: 32px 32px;
+  }
+  
+  .texture-dots {
+    background-image: radial-gradient(var(--border) 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+  }
+  
+  .texture-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 15% 20%, rgba(120, 119, 198, 0.03) 1px, transparent 1px),
+      radial-gradient(circle at 80% 40%, rgba(120, 119, 198, 0.03) 1.5px, transparent 1.5px),
+      radial-gradient(circle at 45% 75%, rgba(120, 119, 198, 0.02) 2px, transparent 2px);
+    background-size: 80px 80px;
+    pointer-events: none;
+    z-index: -5;
   }
 }
