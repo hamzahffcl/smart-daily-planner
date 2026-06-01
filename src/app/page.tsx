@@ -5,7 +5,7 @@ import { usePlannerStore, Task } from "@/store/usePlannerStore";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { Language } from "@/lib/i18n/translations";
 import { useTheme } from "next-themes";
-import { useThemeStore, ThemeColor, ThemeTexture } from "@/store/useThemeStore";
+import { useThemeStore, ThemeColor } from "@/store/useThemeStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,8 +63,6 @@ export default function HomePage() {
 
   const themeColor = useThemeStore((state) => state.themeColor);
   const setThemeColor = useThemeStore((state) => state.setThemeColor);
-  const texture = useThemeStore((state) => state.texture);
-  const setTexture = useThemeStore((state) => state.setTexture);
 
   // Run daily carry-overs and template generation once on load
   const [mounted, setMounted] = useState(false);
@@ -426,49 +424,27 @@ export default function HomePage() {
 
               <Card className="bg-card/60 backdrop-blur-md border">
                 <CardContent className="p-6 space-y-6">
-                  {/* Theme & Texture Section */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-6 border-b">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold tracking-tight text-muted-foreground uppercase">{t('settings.themeTitle')}</label>
-                      <Select value={themeColor} onValueChange={(val) => setThemeColor(val as ThemeColor)}>
-                        <SelectTrigger className="w-full text-xs font-semibold">
-                          <SelectValue>
-                            {themeColor === "violet" ? t('theme.violet') :
-                             themeColor === "emerald" ? t('theme.emerald') :
-                             themeColor === "rose" ? t('theme.rose') :
-                             themeColor === "amber" ? t('theme.amber') :
-                             themeColor === "slate" ? t('theme.slate') : ""}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="violet" className="text-xs font-semibold">{t('theme.violet')}</SelectItem>
-                          <SelectItem value="emerald" className="text-xs font-semibold">{t('theme.emerald')}</SelectItem>
-                          <SelectItem value="rose" className="text-xs font-semibold">{t('theme.rose')}</SelectItem>
-                          <SelectItem value="amber" className="text-xs font-semibold">{t('theme.amber')}</SelectItem>
-                          <SelectItem value="slate" className="text-xs font-semibold">{t('theme.slate')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold tracking-tight text-muted-foreground uppercase">{t('settings.textureTitle')}</label>
-                      <Select value={texture} onValueChange={(val) => setTexture(val as ThemeTexture)}>
-                        <SelectTrigger className="w-full text-xs font-semibold">
-                          <SelectValue>
-                            {texture === "none" ? t('texture.none') :
-                             texture === "grid" ? t('texture.grid') :
-                             texture === "dots" ? t('texture.dots') :
-                             texture === "glass" ? t('texture.glass') : ""}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none" className="text-xs font-semibold">{t('texture.none')}</SelectItem>
-                          <SelectItem value="grid" className="text-xs font-semibold">{t('texture.grid')}</SelectItem>
-                          <SelectItem value="dots" className="text-xs font-semibold">{t('texture.dots')}</SelectItem>
-                          <SelectItem value="glass" className="text-xs font-semibold">{t('texture.glass')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {/* Theme Section */}
+                  <div className="space-y-2 pb-6 border-b">
+                    <label className="text-xs font-bold tracking-tight text-muted-foreground uppercase">{t('settings.themeTitle')}</label>
+                    <Select value={themeColor} onValueChange={(val) => setThemeColor(val as ThemeColor)}>
+                      <SelectTrigger className="w-full sm:w-[250px] text-xs font-semibold">
+                        <SelectValue>
+                          {themeColor === "violet" ? t('theme.violet') :
+                           themeColor === "emerald" ? t('theme.emerald') :
+                           themeColor === "rose" ? t('theme.rose') :
+                           themeColor === "amber" ? t('theme.amber') :
+                           themeColor === "slate" ? t('theme.slate') : ""}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="violet" className="text-xs font-semibold">{t('theme.violet')}</SelectItem>
+                        <SelectItem value="emerald" className="text-xs font-semibold">{t('theme.emerald')}</SelectItem>
+                        <SelectItem value="rose" className="text-xs font-semibold">{t('theme.rose')}</SelectItem>
+                        <SelectItem value="amber" className="text-xs font-semibold">{t('theme.amber')}</SelectItem>
+                        <SelectItem value="slate" className="text-xs font-semibold">{t('theme.slate')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Backup Section */}

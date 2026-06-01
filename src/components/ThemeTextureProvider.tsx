@@ -5,7 +5,6 @@ import { useThemeStore } from "@/store/useThemeStore";
 
 export function ThemeTextureProvider({ children }: { children: React.ReactNode }) {
   const themeColor = useThemeStore((state) => state.themeColor);
-  const texture = useThemeStore((state) => state.texture);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -31,10 +30,8 @@ export function ThemeTextureProvider({ children }: { children: React.ReactNode }
     return <>{children}</>;
   }
 
-  const textureClass = texture !== "none" ? `texture-${texture}` : "";
-
   return (
-    <div className={`min-h-screen w-full relative transition-all duration-300 ${textureClass}`}>
+    <div className="min-h-screen w-full relative transition-all duration-300">
       {children}
     </div>
   );
