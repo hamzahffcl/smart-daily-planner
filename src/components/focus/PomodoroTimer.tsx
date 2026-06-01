@@ -5,6 +5,7 @@ import { usePlannerStore } from "@/store/usePlannerStore";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,17 +24,37 @@ export default function PomodoroTimer() {
 
   const todayTasks = tasks.filter((t) => t.dueDate === todayStr && !t.completed);
 
-  // Focus Modes: 'focus' (25 mins) or 'break' (5 mins)
+  // Focus Modes: 'focus' or 'break'
   const [mode, setMode] = useState<"focus" | "break">("focus");
   const [isActive, setIsActive] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
   
-  // Timer durations in seconds
-  const FOCUS_TIME = 25 * 60;
-  const BREAK_TIME = 5 * 60;
-  const [secondsLeft, setSecondsLeft] = useState(FOCUS_TIME);
+  // Custom durations in minutes
+  const [focusMinutes, setFocusMinutes] = useState(25);
+  const [breakMinutes, setBreakMinutes] = useState(5);
+
+  const FOCUS_TIME = focusMinutes * 60;
+  const BREAK_TIME = breakMinutes * 60;
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle duration input updates safely when timer is not active
+  const handleFocusMinutesChange = (val: number) => {
+    if (val < 1) return;
+    setFocusMinutes(val);
+    if (mode === "focus" && !isActive) {
+      setSecondsLeft(val * 60);
+    }
+  };
+
+  const handleBreakMinutesChange = (val: number) => {
+    if (val < 1) return;
+    setBreakMinutes(val);
+    if (mode === "break" && !isActive) {
+      setSecondsLeft(val * 60);
+    }
+  };
 
   // Programmatic Web Audio Synthesizer Alarm
   const playSynthesizedAlarm = () => {
@@ -87,7 +108,7 @@ export default function PomodoroTimer() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, mode]);
+  }, [isActive, mode, focusMinutes, breakMinutes]);
 
   const handleTimerComplete = () => {
     setIsActive(false);
@@ -96,10 +117,10 @@ export default function PomodoroTimer() {
     if (mode === "focus") {
       completePomodoro(); // Award XP & record statistics
       setMode("break");
-      setSecondsLeft(BREAK_TIME);
+      setSecondsLeft(breakMinutes * 60);
     } else {
       setMode("focus");
-      setSecondsLeft(FOCUS_TIME);
+      setSecondsLeft(focusMinutes * 60);
     }
   };
 
@@ -144,36 +165,76 @@ export default function PomodoroTimer() {
         </p>
       </div>
 
-      {/* Task Selector */}
+      {/* Task & Timer Settings Selector */}
       <Card className="w-full bg-card/60 backdrop-blur-md border">
-        <CardContent className="p-4 space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-            {t('focus.bindTask')}
-          </label>
-          <Select value={selectedTaskId} onValueChange={(val) => setSelectedTaskId(val || "")}>
-            <SelectTrigger className="w-full font-medium">
-              <SelectValue placeholder={t('focus.selectTask')} />
-            </SelectTrigger>
-            <SelectContent>
-              {todayTasks.length > 0 ? (
-                todayTasks.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.title} ({t.priority} Prio)
+        <CardContent className="p-4 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+              {t('focus.bindTask')}
+            </label>
+            <Select value={selectedTaskId} onValueChange={(val) => setSelectedTaskId(val || "")}>
+              <SelectTrigger className="w-full font-medium">
+                <SelectValue placeholder={t('focus.selectTask')} />
+              </SelectTrigger>
+              <SelectContent>
+                {todayTasks.length > 0 ? (
+                  todayTasks.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.title} ({t.priority} Prio)
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    {t('focus.noTasks')}
                   </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="none" disabled>
-                  {t('focus.noTasks')}
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-          {selectedTask && (
-            <div className="text-xs font-semibold text-primary/80 flex items-center gap-1.5 pl-1">
-              <Flame className="h-3.5 w-3.5" />
-              {t('focus.focusingOn')} <span className="underline">{selectedTask.title}</span> {t('focus.xpBonus')}
+                )}
+              </SelectContent>
+            </Select>
+            {selectedTask && (
+              <div className="text-xs font-semibold text-primary/80 flex items-center gap-1.5 pl-1 pt-1">
+                <Flame className="h-3.5 w-3.5" />
+                {t('focus.focusingOn')} <span className="underline">{selectedTask.title}</span> {t('focus.xpBonus')}
+              </div>
+            )}
+          </div>
+
+          {/* Duration Configuration */}
+          <div className="grid grid-cols-2 gap-4 pt-3.5 border-t">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {t('focus.focusDuration')}
+              </label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={120}
+                  value={focusMinutes}
+                  onChange={(e) => handleFocusMinutesChange(Number(e.target.value))}
+                  disabled={isActive}
+                  className="h-9 text-xs font-mono"
+                />
+                <span className="text-xs font-semibold text-muted-foreground shrink-0">{t('focus.minutesUnit')}</span>
+              </div>
             </div>
-          )}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {t('focus.breakDuration')}
+              </label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={breakMinutes}
+                  onChange={(e) => handleBreakMinutesChange(Number(e.target.value))}
+                  disabled={isActive}
+                  className="h-9 text-xs font-mono"
+                />
+                <span className="text-xs font-semibold text-muted-foreground shrink-0">{t('focus.minutesUnit')}</span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
