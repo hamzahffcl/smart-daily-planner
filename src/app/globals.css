@@ -372,23 +372,23 @@
 
   /* Grid overlay pattern */
   .grid-bg {
-    background-size: 20px 20px;
+    background-size: 24px 24px;
     background-image: 
-      linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
+      linear-gradient(to right, color-mix(in oklch, var(--foreground) 10%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 10%, transparent) 1px, transparent 1px);
   }
 
   /* Dots overlay pattern */
   .dots-bg {
     background-size: 16px 16px;
-    background-image: radial-gradient(color-mix(in oklch, var(--foreground) 8%, transparent) 1px, transparent 1px);
+    background-image: radial-gradient(color-mix(in oklch, var(--foreground) 15%, transparent) 1.5px, transparent 1.5px);
   }
 
   /* Pixel Grid Pattern (Cozy Retro) */
   .pixel-grid-bg {
     background-size: 10px 10px;
     background-image: 
-      linear-gradient(to right, color-mix(in oklch, var(--border) 12%, transparent) 1.5px, transparent 1.5px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--border) 12%, transparent) 1.5px, transparent 1.5px);
+      linear-gradient(to right, color-mix(in oklch, var(--border) 16%, transparent) 1.5px, transparent 1.5px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--border) 16%, transparent) 1.5px, transparent 1.5px);
   }
 }

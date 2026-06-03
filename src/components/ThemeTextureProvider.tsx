@@ -49,10 +49,10 @@ export function ThemeTextureProvider({ children }: { children: React.ReactNode }
   else if (themeColor === "cozy-pixel") textureClass = "pixel-grid-bg opacity-40"; // default texture for cozy pixel
 
   return (
-    <div className="min-h-screen w-full relative transition-all duration-300 flex flex-col bg-background text-foreground">
+    <div className="min-h-screen w-full relative z-0 transition-all duration-300 flex flex-col">
       {/* Background Texture Overlay */}
       {textureClass && (
-        <div className={`absolute inset-0 pointer-events-none -z-20 transition-all duration-500 ${textureClass}`} />
+        <div className={`absolute inset-0 pointer-events-none -z-10 transition-all duration-500 ${textureClass}`} />
       )}
       
       {/* Soft Vignette and Ambient Overlay for cozy vibe */}
