@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -167,6 +168,48 @@
   --chart-1: oklch(0.68 0.02 240);
 }
 
+/* Cozy Pixel Theme */
+.theme-cozy-pixel {
+  --background: oklch(0.96 0.02 75);
+  --foreground: oklch(0.20 0.04 40);
+  --card: oklch(0.94 0.03 75);
+  --card-foreground: oklch(0.20 0.04 40);
+  --popover: oklch(0.94 0.03 75);
+  --popover-foreground: oklch(0.20 0.04 40);
+  --primary: oklch(0.48 0.14 45);
+  --primary-foreground: oklch(0.98 0.01 75);
+  --secondary: oklch(0.88 0.04 80);
+  --secondary-foreground: oklch(0.25 0.05 40);
+  --muted: oklch(0.90 0.02 75);
+  --muted-foreground: oklch(0.45 0.05 50);
+  --accent: oklch(0.85 0.10 65);
+  --accent-foreground: oklch(0.20 0.04 40);
+  --border: oklch(0.70 0.08 50);
+  --input: oklch(0.70 0.08 50);
+  --ring: oklch(0.48 0.14 45 / 50%);
+  --chart-1: oklch(0.48 0.14 45);
+}
+.dark.theme-cozy-pixel {
+  --background: oklch(0.18 0.03 35);
+  --foreground: oklch(0.92 0.02 75);
+  --card: oklch(0.22 0.03 35);
+  --card-foreground: oklch(0.92 0.02 75);
+  --popover: oklch(0.22 0.03 35);
+  --popover-foreground: oklch(0.92 0.02 75);
+  --primary: oklch(0.75 0.12 70);
+  --primary-foreground: oklch(0.15 0.03 35);
+  --secondary: oklch(0.26 0.04 35);
+  --secondary-foreground: oklch(0.90 0.02 75);
+  --muted: oklch(0.24 0.03 35);
+  --muted-foreground: oklch(0.65 0.05 60);
+  --accent: oklch(0.35 0.08 45);
+  --accent-foreground: oklch(0.92 0.02 75);
+  --border: oklch(0.30 0.05 35);
+  --input: oklch(0.30 0.05 35);
+  --ring: oklch(0.75 0.12 70 / 40%);
+  --chart-1: oklch(0.75 0.12 70);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -257,5 +300,95 @@
 
   .animate-lofi-note-2 {
     animation: lofi-note-float-2 3.5s infinite linear 1.2s;
+  }
+
+  /* Visual Utilities */
+  .font-pixel {
+    font-family: 'VT323', monospace;
+    font-variant-ligatures: none;
+  }
+
+  .font-pixel-heavy {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    line-height: 1rem;
+    letter-spacing: -0.05em;
+  }
+
+  .pixel-box {
+    border: 3px solid var(--border) !important;
+    box-shadow: 4px 4px 0px 0px var(--border) !important;
+    border-radius: 0px !important;
+  }
+
+  .pixel-shadow {
+    box-shadow: 4px 4px 0px 0px currentColor;
+  }
+
+  .pixel-btn {
+    border: 2px solid var(--border) !important;
+    box-shadow: 3px 3px 0px 0px var(--border) !important;
+    border-radius: 0px !important;
+    transition: all 0.1s ease;
+  }
+
+  .pixel-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px 0px var(--border) !important;
+  }
+
+  /* Glassmorphism & Neon Glow */
+  .glass-panel {
+    background: color-mix(in oklch, var(--card) 45%, transparent);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 20px -5px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  /* Animated Mesh Gradient Background */
+  @keyframes rotate-mesh {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .mesh-bg {
+    background: radial-gradient(circle at 20% 30%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 40%),
+                radial-gradient(circle at 80% 70%, color-mix(in oklch, var(--primary) 8%, transparent), transparent 45%),
+                radial-gradient(circle at 50% 10%, color-mix(in oklch, var(--chart-2) 10%, transparent), transparent 35%);
+    background-size: 200% 200%;
+    animation: rotate-mesh 25s infinite alternate ease-in-out;
+  }
+
+  /* Grid overlay pattern */
+  .grid-bg {
+    background-size: 20px 20px;
+    background-image: 
+      linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  }
+
+  /* Dots overlay pattern */
+  .dots-bg {
+    background-size: 16px 16px;
+    background-image: radial-gradient(color-mix(in oklch, var(--foreground) 8%, transparent) 1px, transparent 1px);
+  }
+
+  /* Pixel Grid Pattern (Cozy Retro) */
+  .pixel-grid-bg {
+    background-size: 10px 10px;
+    background-image: 
+      linear-gradient(to right, color-mix(in oklch, var(--border) 12%, transparent) 1.5px, transparent 1.5px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--border) 12%, transparent) 1.5px, transparent 1.5px);
   }
 }

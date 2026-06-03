@@ -5,7 +5,7 @@ import { usePlannerStore, Task } from "@/store/usePlannerStore";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { Language } from "@/lib/i18n/translations";
 import { useTheme } from "next-themes";
-import { useThemeStore, ThemeColor } from "@/store/useThemeStore";
+import { useThemeStore, ThemeColor, ThemeTexture } from "@/store/useThemeStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,8 @@ export default function HomePage() {
 
   const themeColor = useThemeStore((state) => state.themeColor);
   const setThemeColor = useThemeStore((state) => state.setThemeColor);
+  const themeTexture = useThemeStore((state) => state.themeTexture);
+  const setThemeTexture = useThemeStore((state) => state.setThemeTexture);
 
   // Run daily carry-overs and template generation once on load
   const [mounted, setMounted] = useState(false);
@@ -187,23 +189,31 @@ export default function HomePage() {
       <div className="max-w-6xl w-full mx-auto p-4 md:p-8 flex-1 flex flex-col space-y-6">
         
         {/* APP HEADER */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/45 backdrop-blur-md border p-4 md:px-6 md:py-4 rounded-3xl shadow-sm">
+        <header className={`flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:px-6 md:py-4 transition-all duration-300 ${
+          themeColor === "cozy-pixel" ? "pixel-box bg-card" : "glass-panel neon-glow rounded-3xl shadow-sm"
+        }`}>
           <div className="flex items-center space-x-3.5">
-            <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-extrabold text-lg shadow-md border border-primary/20">
+            <div className={`h-10 w-10 bg-primary flex items-center justify-center text-primary-foreground font-extrabold text-lg shadow-md border ${
+              themeColor === "cozy-pixel" ? "border-2 border-primary-foreground rounded-none font-pixel-heavy" : "rounded-2xl border-primary/20"
+            }`}>
               S
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-extrabold tracking-tight">{t('app.title')}</h1>
+                <h1 className={`text-lg font-extrabold tracking-tight ${themeColor === "cozy-pixel" ? "font-pixel-heavy" : ""}`}>{t('app.title')}</h1>
                 <Sparkles className="h-4 w-4 text-primary animate-pulse" />
               </div>
               
               {/* Header XP bar */}
               <div className="flex items-center space-x-3 mt-1.5">
-                <Badge variant="outline" className="text-[10px] font-bold py-0.5 px-2 bg-primary/10 text-primary rounded-full border-primary/20">
+                <Badge variant="outline" className={`text-[10px] font-bold py-0.5 px-2 bg-primary/10 text-primary border-primary/20 ${
+                  themeColor === "cozy-pixel" ? "rounded-none border-2 border-primary" : "rounded-full"
+                }`}>
                   {t('app.level')} {level}
                 </Badge>
-                <div className="w-32 bg-muted h-2 rounded-full overflow-hidden shadow-inner">
+                <div className={`w-32 bg-muted h-2 overflow-hidden shadow-inner ${
+                  themeColor === "cozy-pixel" ? "rounded-none border border-primary" : "rounded-full"
+                }`}>
                   <div
                     className="bg-primary h-full transition-all duration-500 ease-out"
                     style={{ width: `${xpPercent}%` }}
@@ -240,7 +250,7 @@ export default function HomePage() {
               variant="outline"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-10 w-10 rounded-full shrink-0 border-muted"
+              className={`h-10 w-10 shrink-0 border-muted ${themeColor === "cozy-pixel" ? "pixel-btn bg-card" : "rounded-full"}`}
               title={t('theme.toggle')}
             >
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-primary" />
@@ -253,28 +263,42 @@ export default function HomePage() {
         {/* TABS CONTAINER */}
         <Tabs defaultValue="dashboard" className="flex-1 flex flex-col space-y-6">
           <div className="w-full overflow-x-auto pb-2 -mb-2 hide-scrollbar">
-            <TabsList className="inline-flex h-auto p-1.5 bg-card/60 backdrop-blur-md border rounded-full w-max min-w-full md:min-w-0">
-              <TabsTrigger value="dashboard" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+            <TabsList className={`inline-flex h-auto p-1.5 w-max min-w-full md:min-w-0 transition-all duration-300 ${
+              themeColor === "cozy-pixel" ? "pixel-box bg-card" : "glass-panel rounded-full"
+            }`}>
+              <TabsTrigger value="dashboard" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.dashboard')}</span>
               </TabsTrigger>
-              <TabsTrigger value="focus" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+              <TabsTrigger value="focus" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <Timer className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.focus')}</span>
               </TabsTrigger>
-              <TabsTrigger value="routines" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+              <TabsTrigger value="routines" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <RefreshCw className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.routines')}</span>
               </TabsTrigger>
-              <TabsTrigger value="stats" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+              <TabsTrigger value="stats" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <BarChart3 className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.stats')}</span>
               </TabsTrigger>
-              <TabsTrigger value="gamification" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+              <TabsTrigger value="gamification" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <Award className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.rankings')}</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 rounded-full whitespace-nowrap transition-all flex-1 md:flex-none">
+              <TabsTrigger value="settings" className={`flex items-center justify-center gap-2 text-sm font-semibold py-2 px-5 whitespace-nowrap transition-all flex-1 md:flex-none ${
+                themeColor === "cozy-pixel" ? "rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-pixel" : "rounded-full"
+              }`}>
                 <SettingsIcon className="h-4 w-4 shrink-0" />
                 <span>{t('tabs.settings')}</span>
               </TabsTrigger>
@@ -422,29 +446,93 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <Card className="bg-card/60 backdrop-blur-md border">
+              <Card className={`${themeColor === "cozy-pixel" ? "pixel-box bg-card" : "glass-panel bg-card/60"}`}>
                 <CardContent className="p-6 space-y-6">
                   {/* Theme Section */}
-                  <div className="space-y-2 pb-6 border-b">
-                    <label className="text-xs font-bold tracking-tight text-muted-foreground uppercase">{t('settings.themeTitle')}</label>
-                    <Select value={themeColor} onValueChange={(val) => setThemeColor(val as ThemeColor)}>
-                      <SelectTrigger className="w-full sm:w-[250px] text-xs font-semibold">
-                        <SelectValue>
-                          {themeColor === "violet" ? t('theme.violet') :
-                           themeColor === "emerald" ? t('theme.emerald') :
-                           themeColor === "rose" ? t('theme.rose') :
-                           themeColor === "amber" ? t('theme.amber') :
-                           themeColor === "slate" ? t('theme.slate') : ""}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="violet" className="text-xs font-semibold">{t('theme.violet')}</SelectItem>
-                        <SelectItem value="emerald" className="text-xs font-semibold">{t('theme.emerald')}</SelectItem>
-                        <SelectItem value="rose" className="text-xs font-semibold">{t('theme.rose')}</SelectItem>
-                        <SelectItem value="amber" className="text-xs font-semibold">{t('theme.amber')}</SelectItem>
-                        <SelectItem value="slate" className="text-xs font-semibold">{t('theme.slate')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-4 pb-6 border-b">
+                    <div>
+                      <label className="text-xs font-extrabold tracking-wider text-muted-foreground uppercase">
+                        {t('settings.themeTitle')}
+                      </label>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {language === "id" ? "Pilih skema warna utama untuk aplikasi web dan widget." : "Select the primary color scheme for your dashboard and widgets."}
+                      </p>
+                    </div>
+                    
+                    {/* Color swatches */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                      {[
+                        { id: "violet", color: "bg-purple-600", label: "Violet" },
+                        { id: "emerald", color: "bg-emerald-600", label: "Emerald" },
+                        { id: "rose", color: "bg-rose-600", label: "Rose" },
+                        { id: "amber", color: "bg-amber-600", label: "Amber" },
+                        { id: "slate", color: "bg-slate-600", label: "Slate" },
+                        { id: "cozy-pixel", color: "bg-[#d4a373]", label: "Cozy Pixel", isPixel: true }
+                      ].map((item) => {
+                        const isActive = themeColor === item.id;
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => setThemeColor(item.id as ThemeColor)}
+                            className={`flex flex-col items-center justify-center p-3 text-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                              isActive 
+                                ? (themeColor === "cozy-pixel" ? "border-3 border-primary bg-primary/10 shadow-sm" : "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/45 rounded-2xl border")
+                                : (themeColor === "cozy-pixel" ? "border-3 border-muted bg-card/45 hover:bg-muted/10" : "border-muted bg-card/45 hover:bg-muted/10 rounded-2xl border")
+                            } ${item.isPixel ? "font-pixel" : ""}`}
+                          >
+                            <div className={`h-6 w-6 ${item.color} mb-1.5 flex items-center justify-center text-white text-[10px] font-bold border border-white/20 shadow-inner ${
+                              themeColor === "cozy-pixel" ? "rounded-none border-2 border-primary" : "rounded-full"
+                            }`}>
+                              {isActive && "✓"}
+                            </div>
+                            <span className="text-[11px] font-bold tracking-tight">
+                              {item.id === "cozy-pixel" ? "Cozy Pixel" : t(`theme.${item.id}`)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Background Texture Section */}
+                  <div className="space-y-4 pb-6 border-b">
+                    <div>
+                      <label className="text-xs font-extrabold tracking-wider text-muted-foreground uppercase">
+                        {language === "id" ? "Tekstur & Pola Latar Belakang" : "Background Textures & Patterns"}
+                      </label>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {language === "id" ? "Tambahkan pola geometris atau efek gradien mesh ke latar belakang." : "Overlay geometric structures or mesh gradients to your background."}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {[
+                        { id: "none", label: language === "id" ? "Tanpa Pola" : "None" },
+                        { id: "mesh", label: language === "id" ? "Mesh Gradient" : "Mesh" },
+                        { id: "grid", label: language === "id" ? "Kotak-Kotak" : "Grid" },
+                        { id: "dots", label: language === "id" ? "Titik-Titik" : "Dots" },
+                        { id: "pixel-grid", label: language === "id" ? "Pixel Retro" : "Pixel Grid", isPixel: true }
+                      ].map((item) => {
+                        const isActive = themeTexture === item.id;
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => setThemeTexture(item.id as ThemeTexture)}
+                            className={`flex flex-col items-center justify-center p-2 text-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                              isActive 
+                                ? (themeColor === "cozy-pixel" ? "border-3 border-primary bg-primary/10 shadow-sm" : "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/45 rounded-2xl border")
+                                : (themeColor === "cozy-pixel" ? "border-3 border-muted bg-card/45 hover:bg-muted/10" : "border-muted bg-card/45 hover:bg-muted/10 rounded-2xl border")
+                            } ${item.isPixel || themeColor === "cozy-pixel" ? "font-pixel" : ""}`}
+                          >
+                            <span className="text-[11px] font-bold tracking-tight py-1">
+                              {item.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Backup Section */}

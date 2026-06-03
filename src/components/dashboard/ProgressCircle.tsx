@@ -2,11 +2,13 @@
 
 import { usePlannerStore } from "@/store/usePlannerStore";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { useThemeStore } from "@/store/useThemeStore";
 import { format } from "date-fns";
 
 export default function ProgressCircle() {
   const tasks = usePlannerStore((state) => state.tasks);
   const { t } = useLanguageStore();
+  const themeColor = useThemeStore((state) => state.themeColor);
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
@@ -23,14 +25,33 @@ export default function ProgressCircle() {
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-card/60 backdrop-blur-md border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+    <div className={`flex flex-col items-center justify-center p-6 transition-all duration-300 ${
+      themeColor === "cozy-pixel" 
+        ? "pixel-box bg-card" 
+        : "glass-panel shadow-sm hover:shadow-md hover:scale-[1.01]"
+    }`}>
+      <h3 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 ${
+        themeColor === "cozy-pixel" ? "font-pixel-heavy" : ""
+      }`}>
         {t('dashboard.progress.title')}
       </h3>
       
       <div className="relative flex items-center justify-center h-36 w-36">
         {/* SVG Circle */}
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--primary)" />
+              <stop offset="100%" stopColor="var(--accent)" />
+            </linearGradient>
+            <filter id="progressGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {/* Background circle */}
           <circle
             cx="60"
@@ -45,21 +66,23 @@ export default function ProgressCircle() {
             cx="60"
             cy="60"
             r={radius}
-            className="stroke-primary transition-all duration-500 ease-out"
+            stroke="url(#progressGrad)"
+            filter={themeColor !== "cozy-pixel" ? "url(#progressGlow)" : undefined}
+            className="transition-all duration-500 ease-out"
             strokeWidth={strokeWidth}
             fill="transparent"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
+            strokeLinecap={themeColor === "cozy-pixel" ? "square" : "round"}
           />
         </svg>
 
         {/* Center label */}
         <div className="absolute flex flex-col items-center justify-center text-center">
-          <span className="text-3xl font-extrabold tracking-tight font-sans">
+          <span className={`text-3xl font-extrabold tracking-tight ${themeColor === "cozy-pixel" ? "font-pixel-heavy mt-2 text-2xl" : "font-sans"}`}>
             {percentage}%
           </span>
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase mt-0.5">
+          <span className={`text-[10px] font-semibold text-muted-foreground uppercase mt-0.5 ${themeColor === "cozy-pixel" ? "font-pixel" : ""}`}>
             {t('dashboard.progress.completed')}
           </span>
         </div>
