@@ -8,13 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Volume2, VolumeX, Sparkles, Settings, Send, RefreshCw, Check, AlertCircle, X, Brain } from "lucide-react";
 
 // Local Rule-Based NLP Parser for Indonesian & English
-function localNlpParse(text: string, defaultDate: string): Omit<Task, "id" | "carryOverCount" | "createdAt" | "completed">[] {
+function localNlpParse(text: string, defaultDate: string, language: string): Omit<Task, "id" | "carryOverCount" | "createdAt" | "completed">[] {
   const tasks: Omit<Task, "id" | "carryOverCount" | "createdAt" | "completed">[] = [];
-  
-  // Clean text and split by common list indicators or conjunctions
-  // "lalu", "kemudian", "terus", "sama", "and then", "then", "after that"
   const cleanText = text.toLowerCase().trim();
-  const chunks = cleanText.split(/\s*(?:lalu|kemudian|terus|setelah\s+itu|and\s+then|then|after\s+that|;\s*)\s*/i);
+  
+  // Split chunks based on language
+  let chunks: string[] = [];
+  if (language === "id") {
+    chunks = cleanText.split(/\s*(?:lalu|kemudian|terus|setelah\s+itu|dan\s+juga|;\s*)\s*/i);
+  } else {
+    chunks = cleanText.split(/\s*(?:and\s+then|then|after\s+that|and\s+also|;\s*)\s*/i);
+  }
 
   chunks.forEach((chunk) => {
     if (!chunk.trim() || chunk.length < 3) return;
@@ -22,66 +26,85 @@ function localNlpParse(text: string, defaultDate: string): Omit<Task, "id" | "ca
     let priority: "High" | "Medium" | "Low" = "Medium";
     let alarmTime: string | undefined = undefined;
 
-    // Detect priority keywords
-    if (chunk.match(/(penting|mendesak|darurat|prioritas|high|urgent|important)/i)) {
-      priority = "High";
-    } else if (chunk.match(/(santai|nanti|bisa\s+nanti|low|casual|relax)/i)) {
-      priority = "Low";
+    // Detect priority keywords based on language
+    if (language === "id") {
+      if (chunk.match(/(penting|mendesak|darurat|prioritas|utama)/i)) {
+        priority = "High";
+      } else if (chunk.match(/(santai|nanti|bisa\s+nanti|rendah)/i)) {
+        priority = "Low";
+      }
+    } else {
+      if (chunk.match(/(urgent|important|high|priority|critical)/i)) {
+        priority = "High";
+      } else if (chunk.match(/(low|casual|relax|later)/i)) {
+        priority = "Low";
+      }
     }
 
     // Detect times
-    // Format: "jam 10", "jam 14:00", "jam 2 siang", "at 10 am", "at 3:30 pm"
-    const timeMatchIndo = chunk.match(/(?:jam|pukul)\s*(\d{1,2})(?::(\d{2}))?\s*(pagi|siang|sore|malam)?/i);
-    const timeMatchEng = chunk.match(/(?:at|by)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if (language === "id") {
+      const timeMatchIndo = chunk.match(/(?:jam|pukul)\s*(\d{1,2})(?::(\d{2}))?\s*(pagi|siang|sore|malam)?/i);
+      if (timeMatchIndo) {
+        let hours = parseInt(timeMatchIndo[1], 10);
+        const minutes = timeMatchIndo[2] ? parseInt(timeMatchIndo[2], 10) : 0;
+        const period = timeMatchIndo[3];
 
-    if (timeMatchIndo) {
-      let hours = parseInt(timeMatchIndo[1], 10);
-      const minutes = timeMatchIndo[2] ? parseInt(timeMatchIndo[2], 10) : 0;
-      const period = timeMatchIndo[3];
-
-      if (period) {
-        if (period === "siang" && hours < 12) hours += 0; // e.g. jam 12 siang is 12
-        else if ((period === "sore" || period === "malam") && hours < 12) hours += 12; // e.g. jam 7 malam is 19
-      } else if (hours < 7) {
-        // assumption: if no period and < 7, it's likely afternoon (e.g. "jam 2" is 14)
-        hours += 12;
+        if (period) {
+          if (period === "siang" && hours < 12) hours += 0;
+          else if ((period === "sore" || period === "malam") && hours < 12) hours += 12;
+        } else if (hours < 7) {
+          hours += 12; // assumed pm
+        }
+        alarmTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
       }
-      
-      alarmTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-    } else if (timeMatchEng) {
-      let hours = parseInt(timeMatchEng[1], 10);
-      const minutes = timeMatchEng[2] ? parseInt(timeMatchEng[2], 10) : 0;
-      const ampm = timeMatchEng[3];
+    } else {
+      const timeMatchEng = chunk.match(/(?:at|by)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+      if (timeMatchEng) {
+        let hours = parseInt(timeMatchEng[1], 10);
+        const minutes = timeMatchEng[2] ? parseInt(timeMatchEng[2], 10) : 0;
+        const ampm = timeMatchEng[3];
 
-      if (ampm) {
-        if (ampm.toLowerCase() === "pm" && hours < 12) hours += 12;
-        if (ampm.toLowerCase() === "am" && hours === 12) hours = 0;
+        if (ampm) {
+          if (ampm.toLowerCase() === "pm" && hours < 12) hours += 12;
+          if (ampm.toLowerCase() === "am" && hours === 12) hours = 0;
+        }
+        alarmTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
       }
-      
-      alarmTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
     }
 
-    // Extract title by stripping timing phrases
-    let title = chunk
-      .replace(/(?:hari\s+ini|today)/gi, "")
-      .replace(/(?:saya\s+mau|aku\s+mau|saya\s+akan|aku\s+akan|i\s+want\s+to|i\s+will|i\s+have\s+a)/gi, "")
-      .replace(/(?:jam|pukul)\s*\d{1,2}(?::\d{2})?\s*(?:pagi|siang|sore|malam)?/gi, "")
-      .replace(/(?:at|by)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?/gi, "")
-      .replace(/(?:penting|mendesak|darurat|prioritas|high|urgent|important|low|casual|relax)/gi, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Extract title by stripping timing and stop-words
+    let title = chunk;
+    if (language === "id") {
+      title = title
+        .replace(/(?:hari\s+ini|esok|besok)/gi, "")
+        .replace(/(?:saya\s+mau|aku\s+mau|saya\s+akan|aku\s+akan|ingin)/gi, "")
+        .replace(/(?:jam|pukul)\s*\d{1,2}(?::\d{2})?\s*(?:pagi|siang|sore|malam)?/gi, "")
+        .replace(/(?:penting|mendesak|darurat|prioritas|utama|santai|nanti|bisa\s+nanti|rendah)/gi, "");
+    } else {
+      title = title
+        .replace(/(?:today|tomorrow)/gi, "")
+        .replace(/(?:i\s+want\s+to|i\s+will|i\s+have\s+to|should|need\s+to)/gi, "")
+        .replace(/(?:at|by)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?/gi, "")
+        .replace(/(?:urgent|important|high|priority|critical|low|casual|relax|later)/gi, "");
+    }
+
+    title = title.replace(/\s+/g, " ").trim();
 
     // Capitalize first letter
     if (title) {
       title = title.charAt(0).toUpperCase() + title.slice(1);
       
+      const noteText = language === "id" 
+        ? `Ditambahkan via Suara. Transkrip: "${chunk.trim()}"`
+        : `Added via Voice. Transcript: "${chunk.trim()}"`;
+
       tasks.push({
         title,
         priority,
         dueDate: defaultDate,
-        tags: ["Voice"],
+        tags: [language === "id" ? "Suara" : "Voice"],
         subtasks: [],
-        notes: `Ditambahkan via Suara. Transkrip: "${chunk.trim()}"`,
+        notes: noteText,
         alarmTime,
       });
     }
@@ -111,6 +134,30 @@ export function VoiceAssistant() {
 
   const recognitionRef = useRef<any>(null);
 
+  // Language locale mapping helper
+  const getLangLocale = (lang: string) => {
+    switch (lang) {
+      case "id": return "id-ID";
+      case "en": return "en-US";
+      case "ja": return "ja-JP";
+      case "ar": return "ar-EG";
+      case "zh": return "zh-CN";
+      case "ko": return "ko-KR";
+      default: return "en-US";
+    }
+  };
+
+  const greetings: Record<string, string> = {
+    id: "Halo! Apa rencana kegiatanmu untuk hari ini?",
+    en: "Hello! What are your plans for today?",
+    ja: "こんにちは！今日の予定は何ですか？",
+    ar: "مرحباً! ما هي خططك لهذا اليوم؟",
+    zh: "你好！你今天有什么计划？",
+    ko: "안녕하세요! 오늘 계획이 어떻게 되시나요?"
+  };
+
+  const getGreeting = () => greetings[language] || greetings["en"];
+
   // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -119,7 +166,7 @@ export function VoiceAssistant() {
         const rec = new SpeechRecognition();
         rec.continuous = false;
         rec.interimResults = false;
-        rec.lang = language === "id" ? "id-ID" : "en-US";
+        rec.lang = getLangLocale(language);
 
         rec.onstart = () => {
           setIsListening(true);
@@ -161,7 +208,7 @@ export function VoiceAssistant() {
     }
     window.speechSynthesis.cancel(); // cancel any active speech
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "id" ? "id-ID" : "en-US";
+    utterance.lang = getLangLocale(language);
     if (onEnd) {
       utterance.onend = () => onEnd();
     }
@@ -171,10 +218,7 @@ export function VoiceAssistant() {
   const handleOpen = () => {
     setIsOpen(true);
     setAiState("greeting");
-    const greetingText = language === "id" 
-      ? "Halo! Apa rencana kegiatanmu untuk hari ini?" 
-      : "Hello! What are your plans for today?";
-    speak(greetingText, () => {
+    speak(getGreeting(), () => {
       handleStartListening();
     });
   };
@@ -198,12 +242,49 @@ export function VoiceAssistant() {
     }
   };
 
+  const getLanguageName = (lang: string) => {
+    switch (lang) {
+      case "id": return "Indonesian";
+      case "en": return "English";
+      case "ja": return "Japanese";
+      case "ar": return "Arabic";
+      case "zh": return "Chinese";
+      case "ko": return "Korean";
+      default: return "English";
+    }
+  };
+
   const processTranscript = async (text: string) => {
     setAiState("processing");
     const todayStr = new Date().toISOString().split("T")[0];
 
+    const feedbackSpeak = (count: number) => {
+      const msgs: Record<string, string> = {
+        id: `Saya berhasil mengambil ${count} kegiatan. Silakan periksa di bawah ini.`,
+        en: `I successfully extracted ${count} tasks. Please verify below.`,
+        ja: `タスクを ${count} 件抽出しました。以下で確認してください。`,
+        ar: `تم استخراج ${count} مهام. يرجى التحقق أدناه.`,
+        zh: `提取了 ${count} 个任务。请在下方确认。`,
+        ko: `${count}개의 할 일을 가져왔습니다. 아래에서 확인해주세요.`
+      };
+      speak(msgs[language] || msgs["en"]);
+    };
+
+    const errorSpeak = () => {
+      const msgs: Record<string, string> = {
+        id: "Saya tidak mendeteksi kegiatan apa pun. Silakan coba lagi.",
+        en: "I couldn't detect any task. Please try again.",
+        ja: "タスクが検出されませんでした。もう一度試してください。",
+        ar: "لم أتمكن من الكشف عن أي مهمة. يرجى المحاولة مرة أخرى.",
+        zh: "我没有检测到任何任务。请再试一次。",
+        ko: "할 일을 감지하지 못했습니다. 다시 시도해주세요."
+      };
+      speak(msgs[language] || msgs["en"]);
+    };
+
     if (voiceAiProvider === "ollama") {
       try {
+        const langName = getLanguageName(language);
         const response = await fetch(`${ollamaEndpoint}/api/generate`, {
           method: "POST",
           headers: {
@@ -211,18 +292,18 @@ export function VoiceAssistant() {
           },
           body: JSON.stringify({
             model: ollamaModel,
-            prompt: `Kamu adalah asisten pengelola tugas. Ekstrak aktivitas harian dari teks berikut ke dalam format JSON yang valid.
-Format JSON harus berupa array dari objek dengan format:
+            prompt: `You are a helper to extract daily activities from text. Extract the activities from user speech into a valid JSON array.
+The JSON format must be an array of objects with the structure:
 [
   {
-    "title": "judul tugas/kegiatan singkat",
+    "title": "short task title in ${langName}",
     "priority": "High" | "Medium" | "Low",
-    "alarmTime": "HH:MM" (format jam 24 jam jika disebutkan waktu kegiatannya, jika tidak ada kosongkan saja atau null),
-    "notes": "catatan singkat jika ada info tambahan"
+    "alarmTime": "HH:MM" (24-hour time format if a time is specified in the text, otherwise null or empty string),
+    "notes": "brief detail or note"
   }
 ]
-Jangan memberikan kalimat pembuka atau penutup. Berikan HANYA array JSON mentah saja.
-Teks input: "${text}"`,
+Do not output markdown code blocks (e.g. \`\`\`json) or any conversational text. Return ONLY the raw JSON array.
+Text: "${text}"`,
             stream: false,
             options: {
               temperature: 0.1
@@ -234,7 +315,6 @@ Teks input: "${text}"`,
         
         const data = await response.json();
         let cleanedResponse = data.response.trim();
-        // Strip markdown formatting if AI outputs code block
         if (cleanedResponse.startsWith("```")) {
           cleanedResponse = cleanedResponse.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
         }
@@ -245,14 +325,14 @@ Teks input: "${text}"`,
             title: t.title || "Kegiatan Baru",
             priority: t.priority === "High" || t.priority === "Low" ? t.priority : "Medium",
             dueDate: todayStr,
-            tags: ["Voice (Ollama)"],
+            tags: [language === "id" ? "Suara (Ollama)" : "Voice (Ollama)"],
             subtasks: [],
-            notes: t.notes || `Ekstraksi asisten dari transkrip: "${text}"`,
+            notes: t.notes || (language === "id" ? `Ekstraksi asisten: "${text}"` : `Assistant extraction: "${text}"`),
             alarmTime: t.alarmTime || undefined,
           }));
           setParsedTasks(formatted);
           setAiState("confirming");
-          speak(language === "id" ? `Saya berhasil memetakan ${formatted.length} kegiatan. Silakan periksa daftar tugas di bawah ini.` : `I extracted ${formatted.length} tasks. Please verify the checklist below.`);
+          feedbackSpeak(formatted.length);
           return;
         }
       } catch (err) {
@@ -261,14 +341,14 @@ Teks input: "${text}"`,
     }
 
     // Local rule-based fallback
-    const result = localNlpParse(text, todayStr);
+    const result = localNlpParse(text, todayStr, language);
     setParsedTasks(result);
-    setAiState("confirming");
     
     if (result.length > 0) {
-      speak(language === "id" ? `Berhasil mengambil ${result.length} kegiatan. Silakan periksa kembali.` : `Extracted ${result.length} tasks. Please confirm below.`);
+      setAiState("confirming");
+      feedbackSpeak(result.length);
     } else {
-      speak(language === "id" ? "Saya kurang memahami kegiatannya. Bisa ulangi kembali?" : "I couldn't detect any task. Could you try again?");
+      errorSpeak();
       setAiState("idle");
     }
   };
