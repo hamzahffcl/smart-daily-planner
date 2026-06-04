@@ -79,9 +79,9 @@ function localNlpParse(text: string, defaultDate: string): Omit<Task, "id" | "ca
         title,
         priority,
         dueDate: defaultDate,
-        tags: ["Voice AI"],
+        tags: ["Voice"],
         subtasks: [],
-        notes: `Ditambahkan via Voice AI. Transkrip: "${chunk.trim()}"`,
+        notes: `Ditambahkan via Suara. Transkrip: "${chunk.trim()}"`,
         alarmTime,
       });
     }
@@ -154,11 +154,17 @@ export function VoiceAssistant() {
   }, [language]);
 
   // Handle TTS Greeting
-  const speak = (text: string) => {
-    if (aiSpeechMuted || typeof window === "undefined") return;
+  const speak = (text: string, onEnd?: () => void) => {
+    if (aiSpeechMuted || typeof window === "undefined") {
+      if (onEnd) onEnd();
+      return;
+    }
     window.speechSynthesis.cancel(); // cancel any active speech
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language === "id" ? "id-ID" : "en-US";
+    if (onEnd) {
+      utterance.onend = () => onEnd();
+    }
     window.speechSynthesis.speak(utterance);
   };
 
@@ -168,7 +174,9 @@ export function VoiceAssistant() {
     const greetingText = language === "id" 
       ? "Halo! Apa rencana kegiatanmu untuk hari ini?" 
       : "Hello! What are your plans for today?";
-    speak(greetingText);
+    speak(greetingText, () => {
+      handleStartListening();
+    });
   };
 
   const handleStartListening = () => {
@@ -237,9 +245,9 @@ Teks input: "${text}"`,
             title: t.title || "Kegiatan Baru",
             priority: t.priority === "High" || t.priority === "Low" ? t.priority : "Medium",
             dueDate: todayStr,
-            tags: ["Voice AI (Ollama)"],
+            tags: ["Voice (Ollama)"],
             subtasks: [],
-            notes: t.notes || `Ekstraksi AI dari transkrip: "${text}"`,
+            notes: t.notes || `Ekstraksi asisten dari transkrip: "${text}"`,
             alarmTime: t.alarmTime || undefined,
           }));
           setParsedTasks(formatted);
@@ -280,7 +288,7 @@ Teks input: "${text}"`,
       <button
         onClick={handleOpen}
         className="fixed bottom-6 right-6 z-30 h-14 w-14 rounded-2xl bg-[#ab7052] border-4 border-[#4d3227] hover:scale-105 active:scale-95 transition-all shadow-[4px_4px_0px_#4d3227] flex items-center justify-center text-white cursor-pointer select-none"
-        title={language === "id" ? "Tanya Asisten AI Suara" : "Ask Voice AI"}
+        title={language === "id" ? "Tanya Asisten Suara" : "Ask Voice Assistant"}
       >
         <Sparkles className="h-6 w-6 animate-pulse" />
       </button>
@@ -294,7 +302,7 @@ Teks input: "${text}"`,
               <div className="flex justify-between items-center pb-4 border-b-2 border-dashed border-[#4d3227] mb-4">
                 <div className="flex items-center gap-2">
                   <Brain className="h-5 w-5" />
-                  <span className="font-bold text-xs uppercase tracking-wider">AI Lofi Assistant</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">{language === "id" ? "Asisten Suara" : "Voice Assistant"}</span>
                 </div>
                 <div className="flex gap-2">
                   <button 
@@ -405,7 +413,7 @@ Teks input: "${text}"`,
 
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold tracking-wider text-[#ab7052] uppercase font-mono">
-                    {aiState === "listening" ? "Listening..." : aiState === "processing" ? "Processing..." : "Lofi Bot Assistant"}
+                    {aiState === "listening" ? "Listening..." : aiState === "processing" ? "Processing..." : (language === "id" ? "Asisten Suara" : "Voice Assistant")}
                   </span>
                   <p className="text-xs font-semibold leading-relaxed">
                     {aiState === "greeting" && (language === "id" ? "Ada rencana apa hari ini?" : "Any plans for today?")}
