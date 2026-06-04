@@ -121,6 +121,7 @@ export function VoiceAssistant() {
   const voiceAiProvider = usePlannerStore((state) => state.voiceAiProvider);
   const ollamaEndpoint = usePlannerStore((state) => state.ollamaEndpoint);
   const ollamaModel = usePlannerStore((state) => state.ollamaModel);
+  const webLlmModel = usePlannerStore((state) => state.webLlmModel);
   const updateVoiceSettings = usePlannerStore((state) => state.updateVoiceSettings);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -132,11 +133,62 @@ export function VoiceAssistant() {
   const [showSettings, setShowSettings] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [speakingLanguage, setSpeakingLanguage] = useState<string>(language);
+  const [webLlmProgress, setWebLlmProgress] = useState("");
+  const [webLlmProgressPercent, setWebLlmProgressPercent] = useState(0);
+  const [webLlmLoading, setWebLlmLoading] = useState(false);
+
+  const engineRef = useRef<any>(null);
 
   // Sync speaking language when app language changes
   useEffect(() => {
     setSpeakingLanguage(language);
   }, [language]);
+
+  // Clean up WebLLM engine on unmount if any
+  useEffect(() => {
+    return () => {
+      if (engineRef.current) {
+        try {
+          engineRef.current.unload();
+        } catch (e) {
+          console.warn("Unloading failed:", e);
+        }
+      }
+    };
+  }, []);
+
+  const initWebLlmEngine = async () => {
+    if (engineRef.current) return engineRef.current;
+    
+    setWebLlmLoading(true);
+    setWebLlmProgress(language === "id" ? "Menyiapkan WebGPU..." : "Initializing WebGPU...");
+    setWebLlmProgressPercent(0);
+    
+    try {
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      
+      // Check WebGPU compatibility
+      if (typeof navigator === "undefined" || !(navigator as any).gpu) {
+        throw new Error("WebGPU is not supported by your browser or hardware.");
+      }
+
+      const engine = await CreateMLCEngine(webLlmModel, {
+        initProgressCallback: (report) => {
+          setWebLlmProgress(report.text);
+          setWebLlmProgressPercent(Math.round(report.progress * 100));
+        }
+      });
+      
+      engineRef.current = engine;
+      setWebLlmLoading(false);
+      return engine;
+    } catch (err: any) {
+      setWebLlmLoading(false);
+      const errMsg = err?.message || String(err);
+      console.error("Failed to load WebLLM engine:", errMsg);
+      throw new Error(errMsg);
+    }
+  };
 
   const recognitionRef = useRef<any>(null);
 
@@ -288,6 +340,63 @@ export function VoiceAssistant() {
       speak(msgs[language] || msgs["en"]);
     };
 
+    if (voiceAiProvider === "webllm") {
+      try {
+        const inputLang = getLanguageName(speakingLanguage);
+        const outputLang = getLanguageName(language);
+        
+        const engine = await initWebLlmEngine();
+        
+        const messages = [
+          {
+            role: "system",
+            content: `You are a helper to extract daily activities from text. Extract the activities from user speech into a valid JSON array.
+The user spoke in ${inputLang}. Extract the tasks and write their titles and notes in ${outputLang}.
+The JSON format must be a raw JSON array of objects with the structure:
+[
+  {
+    "title": "short task title in ${outputLang}",
+    "priority": "High" | "Medium" | "Low",
+    "alarmTime": "HH:MM" (24-hour time format if a time is specified in the text, otherwise null or empty string),
+    "notes": "brief detail or note in ${outputLang}"
+  }
+]
+Do not output markdown code blocks (e.g. \`\`\`json) or any conversational text. Return ONLY the raw JSON array.`
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ];
+
+        const reply = await engine.chat.completions.create({ messages });
+        let cleanedResponse = reply.choices[0].message.content.trim();
+        if (cleanedResponse.startsWith("```")) {
+          cleanedResponse = cleanedResponse.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+        }
+
+        const tasksParsed = JSON.parse(cleanedResponse);
+        if (Array.isArray(tasksParsed)) {
+          const formatted = tasksParsed.map((t: any) => ({
+            title: t.title || (language === "id" ? "Kegiatan Baru" : "New Task"),
+            priority: t.priority === "High" || t.priority === "Low" ? t.priority : "Medium",
+            dueDate: todayStr,
+            tags: [language === "id" ? "Suara (Offline LLM)" : "Voice (Offline LLM)"],
+            subtasks: [],
+            notes: t.notes || (language === "id" ? `Ekstraksi offline: "${text}"` : `Offline extraction: "${text}"`),
+            alarmTime: t.alarmTime || undefined,
+          }));
+          setParsedTasks(formatted);
+          setAiState("confirming");
+          feedbackSpeak(formatted.length);
+          return;
+        }
+      } catch (err: any) {
+        console.error("WebLLM parsing failed, falling back to local rule-based engine:", err);
+        setErrorMsg(language === "id" ? `WebGPU/WebLLM gagal: ${err.message || err}` : `WebGPU/WebLLM failed: ${err.message || err}`);
+      }
+    }
+
     if (voiceAiProvider === "ollama") {
       try {
         const inputLang = getLanguageName(speakingLanguage);
@@ -417,18 +526,38 @@ Text: "${text}"`,
               {/* Settings Sub-Panel */}
               {showSettings ? (
                 <div className="bg-[#e5cda3] p-4 border-2 border-[#4d3227] mb-4 space-y-3 text-xs">
-                  <h4 className="font-bold border-b border-[#4d3227] pb-1 uppercase">Settings</h4>
+                  <h4 className="font-bold border-b border-[#4d3227] pb-1 uppercase">{language === "id" ? "Pengaturan" : "Settings"}</h4>
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-bold">Provider:</label>
+                    <label className="font-bold">{language === "id" ? "Penyedia Suara:" : "Voice Provider:"}</label>
                     <select
                       value={voiceAiProvider}
                       onChange={(e) => updateVoiceSettings({ voiceAiProvider: e.target.value as any })}
                       className="p-1.5 bg-[#f4ecd8] border-2 border-[#4d3227] outline-none"
                     >
                       <option value="local">{language === "id" ? "Offline Bawaan (Ringan & Cepat)" : "Offline Local (Fast)"}</option>
-                      <option value="ollama">Ollama LLM (Lokal di PC Anda)</option>
+                      <option value="webllm">{language === "id" ? "WebLLM (Browser Offline / APK)" : "WebLLM (Browser Offline / APK)"}</option>
+                      <option value="ollama">Ollama LLM (Lokal di PC Anda / PC Local)</option>
                     </select>
                   </div>
+
+                  {voiceAiProvider === "webllm" && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold">{language === "id" ? "Model WebLLM:" : "WebLLM Model:"}</label>
+                      <select
+                        value={webLlmModel}
+                        onChange={(e) => updateVoiceSettings({ webLlmModel: e.target.value })}
+                        className="p-1.5 bg-[#f4ecd8] border-2 border-[#4d3227] outline-none font-mono text-[11px]"
+                      >
+                        <option value="Qwen2.5-0.5B-Instruct-q4f16_1-MLC">Qwen 2.5 0.5B (~350MB, Recommended)</option>
+                        <option value="SmolLM2-135M-Instruct-q4f16_1-MLC">SmolLM2 135M (~100MB, Ultra Light)</option>
+                      </select>
+                      <div className="text-[10px] text-[#4d3227]/80 leading-snug mt-1 italic">
+                        {language === "id" 
+                          ? "*Membutuhkan browser dengan dukungan WebGPU (Chrome, Edge, Opera, dll) dan akan memakan kuota saat unduhan pertama." 
+                          : "*Requires WebGPU-enabled browser (Chrome, Edge, etc) and uses bandwidth only on first load."}
+                      </div>
+                    </div>
+                  )}
 
                   {voiceAiProvider === "ollama" && (
                     <>
@@ -457,7 +586,7 @@ Text: "${text}"`,
                     onClick={() => setShowSettings(false)}
                     className="w-full mt-2 bg-[#ab7052] border-2 border-[#4d3227] text-white rounded-none hover:bg-[#8d5236] text-xs py-1"
                   >
-                    Save & Close
+                    {language === "id" ? "Simpan & Tutup" : "Save & Close"}
                   </Button>
                 </div>
               ) : null}
@@ -512,6 +641,29 @@ Text: "${text}"`,
                   </p>
                 </div>
               </div>
+              {/* WebLLM Loading Progress */}
+              {webLlmLoading && (
+                <div className="bg-[#e5cda3] p-4 border-2 border-[#4d3227] mb-4 space-y-2">
+                  <div className="flex justify-between text-xs font-bold font-mono">
+                    <span>{language === "id" ? "Memuat Model (Offline)..." : "Loading Model (Offline)..."}</span>
+                    <span>{webLlmProgressPercent}%</span>
+                  </div>
+                  <div className="w-full h-4 bg-[#f4ecd8] border-2 border-[#4d3227] p-0.5 relative">
+                    <div 
+                      className="h-full bg-[#ab7052] transition-all duration-300" 
+                      style={{ width: `${webLlmProgressPercent}%` }} 
+                    />
+                  </div>
+                  <div className="text-[10px] text-[#4d3227] leading-relaxed break-all font-mono">
+                    {webLlmProgress}
+                  </div>
+                  <div className="text-[9px] text-[#4d3227]/70 font-sans italic">
+                    {language === "id" 
+                      ? "*Unduhan pertama berkisar antara 100MB - 350MB dan akan disimpan di memori browser." 
+                      : "*First-time download is approx. 100MB - 350MB and will be cached in your browser."}
+                  </div>
+                </div>
+              )}
 
               {/* Status & Speech Input Box */}
               {transcript && (
@@ -570,11 +722,13 @@ Text: "${text}"`,
                   <div className="flex flex-col items-center gap-2">
                     <button
                       onClick={isListening ? handleStopListening : handleStartListening}
+                      disabled={webLlmLoading}
                       className={`h-16 w-16 rounded-full border-4 border-[#4d3227] shadow-[2px_2px_0px_#4d3227] flex items-center justify-center transition-all ${
+                        webLlmLoading ? "bg-gray-400 text-gray-700 opacity-60 cursor-not-allowed" :
                         isListening ? "bg-rose-500 text-white animate-pulse" : "bg-[#bc8265] text-white hover:scale-105"
                       }`}
                     >
-                      {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                      {webLlmLoading ? <RefreshCw className="h-6 w-6 animate-spin" /> : isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
                     </button>
                     
                     {/* Speaking Language Selector */}
@@ -583,8 +737,8 @@ Text: "${text}"`,
                       <select
                         value={speakingLanguage}
                         onChange={(e) => setSpeakingLanguage(e.target.value)}
-                        disabled={isListening}
-                        className="bg-[#e5cda3] border border-[#4d3227] px-1 py-0.5 outline-none text-[#4d3227] rounded-none cursor-pointer font-sans"
+                        disabled={isListening || webLlmLoading}
+                        className="bg-[#e5cda3] border border-[#4d3227] px-1 py-0.5 outline-none text-[#4d3227] rounded-none cursor-pointer font-sans disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="id">Bahasa Indonesia</option>
                         <option value="en">English</option>

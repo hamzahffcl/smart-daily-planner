@@ -61,9 +61,10 @@ export interface PlannerState {
   pomodorosCompleted: number;
   unlockedAchievements: string[];
   voiceAiEnabled: boolean;
-  voiceAiProvider: "local" | "ollama";
+  voiceAiProvider: "local" | "ollama" | "webllm";
   ollamaEndpoint: string;
   ollamaModel: string;
+  webLlmModel: string;
   
   // Actions
   addTask: (task: Omit<Task, "id" | "carryOverCount" | "createdAt" | "completed">) => void;
@@ -71,7 +72,7 @@ export interface PlannerState {
   deleteTask: (id: string) => void;
   toggleTask: (id: string) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
-  updateVoiceSettings: (settings: Partial<{ voiceAiEnabled: boolean; voiceAiProvider: "local" | "ollama"; ollamaEndpoint: string; ollamaModel: string }>) => void;
+  updateVoiceSettings: (settings: Partial<{ voiceAiEnabled: boolean; voiceAiProvider: "local" | "ollama" | "webllm"; ollamaEndpoint: string; ollamaModel: string; webLlmModel: string }>) => void;
   
   // Recurring Templates
   addRecurringTemplate: (template: Omit<RecurringTemplate, "id" | "createdAt" | "active">) => void;
@@ -118,6 +119,7 @@ export const usePlannerStore = create<PlannerState>()(
       voiceAiProvider: "local",
       ollamaEndpoint: "http://localhost:11434",
       ollamaModel: "qwen2.5:0.5b",
+      webLlmModel: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
 
       addTask: (taskData) => {
         const newTask: Task = {
