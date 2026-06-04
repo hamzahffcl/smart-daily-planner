@@ -314,6 +314,14 @@ export function VoiceAssistant() {
   const handleOpen = () => {
     setIsOpen(true);
     setAiState("greeting");
+
+    // Pre-warm/load WebLLM engine in the background while the greeting plays
+    if (voiceAiProvider === "webllm") {
+      initWebLlmEngine().catch((err) => {
+        console.warn("Pre-warming WebLLM engine failed:", err);
+      });
+    }
+
     speak(getGreeting(), () => {
       handleStartListening();
     });
@@ -423,18 +431,9 @@ export function VoiceAssistant() {
         const messages = [
           {
             role: "system",
-            content: `You are a helper to extract daily activities from text. Extract the activities from user speech into a valid JSON array.
-The user spoke in ${inputLang}. Extract the tasks and write their titles and notes in ${outputLang}.
-The JSON format must be a raw JSON array of objects with the structure:
-[
-  {
-    "title": "short task title in ${outputLang}",
-    "priority": "High" | "Medium" | "Low",
-    "alarmTime": "HH:MM" (24-hour time format if a time is specified in the text, otherwise null or empty string),
-    "notes": "brief detail or note in ${outputLang}"
-  }
-]
-Do not output markdown code blocks (e.g. \`\`\`json) or any conversational text. Return ONLY the raw JSON array.`
+            content: `Extract tasks from user speech into JSON array:
+[{"title":"task title in ${outputLang}","priority":"High"|"Medium"|"Low","alarmTime":"HH:MM"|null,"notes":"brief note in ${outputLang}"}]
+User language: ${inputLang}. Output language: ${outputLang}. No markdown, no conversation, output raw JSON only.`
           },
           {
             role: "user",
@@ -442,7 +441,11 @@ Do not output markdown code blocks (e.g. \`\`\`json) or any conversational text.
           }
         ];
 
-        const reply = await engine.chat.completions.create({ messages });
+        const reply = await engine.chat.completions.create({
+          messages,
+          temperature: 0.0,
+          max_tokens: 128,
+        });
         let cleanedResponse = reply.choices[0].message.content.trim();
         if (cleanedResponse.startsWith("```")) {
           cleanedResponse = cleanedResponse.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
