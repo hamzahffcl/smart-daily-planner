@@ -60,6 +60,10 @@ export interface PlannerState {
   lastOpenedDate: string; // YYYY-MM-DD
   pomodorosCompleted: number;
   unlockedAchievements: string[];
+  voiceAiEnabled: boolean;
+  voiceAiProvider: "local" | "ollama";
+  ollamaEndpoint: string;
+  ollamaModel: string;
   
   // Actions
   addTask: (task: Omit<Task, "id" | "carryOverCount" | "createdAt" | "completed">) => void;
@@ -67,6 +71,7 @@ export interface PlannerState {
   deleteTask: (id: string) => void;
   toggleTask: (id: string) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
+  updateVoiceSettings: (settings: Partial<{ voiceAiEnabled: boolean; voiceAiProvider: "local" | "ollama"; ollamaEndpoint: string; ollamaModel: string }>) => void;
   
   // Recurring Templates
   addRecurringTemplate: (template: Omit<RecurringTemplate, "id" | "createdAt" | "active">) => void;
@@ -109,6 +114,10 @@ export const usePlannerStore = create<PlannerState>()(
       lastOpenedDate: format(new Date(), "yyyy-MM-dd"),
       pomodorosCompleted: 0,
       unlockedAchievements: [],
+      voiceAiEnabled: false,
+      voiceAiProvider: "local",
+      ollamaEndpoint: "http://localhost:11434",
+      ollamaModel: "qwen2.5:0.5b",
 
       addTask: (taskData) => {
         const newTask: Task = {
@@ -211,6 +220,13 @@ export const usePlannerStore = create<PlannerState>()(
         });
 
         get().addXp(xpGained);
+      },
+
+      updateVoiceSettings: (settings) => {
+        set((state) => ({
+          ...state,
+          ...settings,
+        }));
       },
 
       addRecurringTemplate: (templateData) => {

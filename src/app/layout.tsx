@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { ThemeTextureProvider } from "@/components/ThemeTextureProvider";
 import AlarmManager from "@/components/AlarmManager";
+import { VoiceAssistant } from "@/components/VoiceAssistant";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
             <ThemeTextureProvider>
               {children}
               <AlarmManager />
+              <VoiceAssistant />
             </ThemeTextureProvider>
           </LanguageProvider>
         </ThemeProvider>
