@@ -150,6 +150,9 @@ export function VoiceAssistant() {
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
       }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
       if (engineRef.current) {
         try {
           engineRef.current.unload();
@@ -196,6 +199,7 @@ export function VoiceAssistant() {
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const processTranscriptRef = useRef<any>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
 
   // Language locale mapping helper
   const getLangLocale = (lang: string) => {
@@ -250,6 +254,10 @@ export function VoiceAssistant() {
 
         rec.onend = () => {
           setIsListening(false);
+          if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+            mediaStreamRef.current = null;
+          }
         };
 
         rec.onresult = (event: any) => {
@@ -312,11 +320,22 @@ export function VoiceAssistant() {
   };
 
   const handleStartListening = async () => {
-    // Request microphone permission natively if possible to trigger WebView permission prompt
+    setErrorMsg("");
+    // Request microphone permission and keep the stream active with noise suppression/echo cancellation constraints
     if (typeof navigator !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((track) => track.stop()); // close the stream immediately
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+        mediaStreamRef.current = stream;
       } catch (err: any) {
         console.error("Microphone permission failed:", err);
         setErrorMsg(
@@ -344,6 +363,10 @@ export function VoiceAssistant() {
   const handleStopListening = () => {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
