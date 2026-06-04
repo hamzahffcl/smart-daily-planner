@@ -71,6 +71,15 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
     runDailyMaintenance();
+
+    // Request notification permissions on app startup
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then((permission) => {
+          console.log("Notification permission requested:", permission);
+        });
+      }
+    }
   }, []);
 
   // Task creation/editing state
