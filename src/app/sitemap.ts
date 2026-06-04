@@ -1,5 +1,7 @@
 import { MetadataRoute } from "next";
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   // Ganti URL di bawah dengan URL domain asli Anda setelah dideploy di Vercel
   const baseUrl = "https://smart-daily-planner.vercel.app";
