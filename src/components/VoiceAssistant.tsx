@@ -131,6 +131,12 @@ export function VoiceAssistant() {
   const [aiSpeechMuted, setAiSpeechMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [speakingLanguage, setSpeakingLanguage] = useState<string>(language);
+
+  // Sync speaking language when app language changes
+  useEffect(() => {
+    setSpeakingLanguage(language);
+  }, [language]);
 
   const recognitionRef = useRef<any>(null);
 
@@ -166,7 +172,7 @@ export function VoiceAssistant() {
         const rec = new SpeechRecognition();
         rec.continuous = false;
         rec.interimResults = false;
-        rec.lang = getLangLocale(language);
+        rec.lang = getLangLocale(speakingLanguage);
 
         rec.onstart = () => {
           setIsListening(true);
@@ -198,7 +204,7 @@ export function VoiceAssistant() {
         recognitionRef.current = rec;
       }
     }
-  }, [language]);
+  }, [language, speakingLanguage]);
 
   // Handle TTS Greeting
   const speak = (text: string, onEnd?: () => void) => {
@@ -284,7 +290,8 @@ export function VoiceAssistant() {
 
     if (voiceAiProvider === "ollama") {
       try {
-        const langName = getLanguageName(language);
+        const inputLang = getLanguageName(speakingLanguage);
+        const outputLang = getLanguageName(language);
         const response = await fetch(`${ollamaEndpoint}/api/generate`, {
           method: "POST",
           headers: {
@@ -293,13 +300,14 @@ export function VoiceAssistant() {
           body: JSON.stringify({
             model: ollamaModel,
             prompt: `You are a helper to extract daily activities from text. Extract the activities from user speech into a valid JSON array.
+The user spoke in ${inputLang}. Extract the tasks and write their titles and notes in ${outputLang}.
 The JSON format must be an array of objects with the structure:
 [
   {
-    "title": "short task title in ${langName}",
+    "title": "short task title in ${outputLang}",
     "priority": "High" | "Medium" | "Low",
     "alarmTime": "HH:MM" (24-hour time format if a time is specified in the text, otherwise null or empty string),
-    "notes": "brief detail or note"
+    "notes": "brief detail or note in ${outputLang}"
   }
 ]
 Do not output markdown code blocks (e.g. \`\`\`json) or any conversational text. Return ONLY the raw JSON array.
@@ -341,7 +349,7 @@ Text: "${text}"`,
     }
 
     // Local rule-based fallback
-    const result = localNlpParse(text, todayStr, language);
+    const result = localNlpParse(text, todayStr, speakingLanguage);
     setParsedTasks(result);
     
     if (result.length > 0) {
@@ -559,14 +567,34 @@ Text: "${text}"`,
                     </Button>
                   </>
                 ) : (
-                  <button
-                    onClick={isListening ? handleStopListening : handleStartListening}
-                    className={`h-16 w-16 rounded-full border-4 border-[#4d3227] shadow-[2px_2px_0px_#4d3227] flex items-center justify-center transition-all ${
-                      isListening ? "bg-rose-500 text-white animate-pulse" : "bg-[#bc8265] text-white hover:scale-105"
-                    }`}
-                  >
-                    {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                  </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={isListening ? handleStopListening : handleStartListening}
+                      className={`h-16 w-16 rounded-full border-4 border-[#4d3227] shadow-[2px_2px_0px_#4d3227] flex items-center justify-center transition-all ${
+                        isListening ? "bg-rose-500 text-white animate-pulse" : "bg-[#bc8265] text-white hover:scale-105"
+                      }`}
+                    >
+                      {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                    </button>
+                    
+                    {/* Speaking Language Selector */}
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold">
+                      <span className="opacity-75">{language === "id" ? "Bahasa Ucapan:" : "Speaking Lang:"}</span>
+                      <select
+                        value={speakingLanguage}
+                        onChange={(e) => setSpeakingLanguage(e.target.value)}
+                        disabled={isListening}
+                        className="bg-[#e5cda3] border border-[#4d3227] px-1 py-0.5 outline-none text-[#4d3227] rounded-none cursor-pointer font-sans"
+                      >
+                        <option value="id">Bahasa Indonesia</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語 (Japanese)</option>
+                        <option value="ar">العربية (Arabic)</option>
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="ko">한국어 (Korean)</option>
+                      </select>
+                    </div>
+                  </div>
                 )}
               </div>
 
