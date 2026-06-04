@@ -147,6 +147,9 @@ export function VoiceAssistant() {
   // Clean up WebLLM engine on unmount if any
   useEffect(() => {
     return () => {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
       if (engineRef.current) {
         try {
           engineRef.current.unload();
@@ -191,6 +194,8 @@ export function VoiceAssistant() {
   };
 
   const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const processTranscriptRef = useRef<any>(null);
 
   // Language locale mapping helper
   const getLangLocale = (lang: string) => {
@@ -222,8 +227,8 @@ export function VoiceAssistant() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const rec = new SpeechRecognition();
-        rec.continuous = false;
-        rec.interimResults = false;
+        rec.continuous = true;
+        rec.interimResults = true;
         rec.lang = getLangLocale(speakingLanguage);
 
         rec.onstart = () => {
@@ -247,10 +252,35 @@ export function VoiceAssistant() {
           setIsListening(false);
         };
 
-        rec.onresult = async (event: any) => {
-          const text = event.results[0][0].transcript;
-          setTranscript(text);
-          await processTranscript(text);
+        rec.onresult = (event: any) => {
+          let finalTranscript = "";
+          let interimTranscript = "";
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          const fullText = (finalTranscript || interimTranscript).trim();
+          if (fullText) {
+            setTranscript(fullText);
+          }
+
+          // Reset silence timer to automatically process after 2.5 seconds of silence
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            if (fullText) {
+              rec.stop();
+              if (processTranscriptRef.current) {
+                processTranscriptRef.current(fullText);
+              }
+            }
+          }, 2500); // 2.5 seconds of silence
         };
 
         recognitionRef.current = rec;
@@ -281,7 +311,24 @@ export function VoiceAssistant() {
     });
   };
 
-  const handleStartListening = () => {
+  const handleStartListening = async () => {
+    // Request microphone permission natively if possible to trigger WebView permission prompt
+    if (typeof navigator !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop()); // close the stream immediately
+      } catch (err: any) {
+        console.error("Microphone permission failed:", err);
+        setErrorMsg(
+          language === "id"
+            ? "Akses mikrofon ditolak. Silakan izinkan mikrofon di pengaturan aplikasi HP Anda."
+            : "Microphone access denied. Please enable microphone permissions in your App settings."
+        );
+        setAiState("idle");
+        return;
+      }
+    }
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
@@ -295,6 +342,9 @@ export function VoiceAssistant() {
   };
 
   const handleStopListening = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
@@ -469,6 +519,10 @@ Text: "${text}"`,
       setAiState("idle");
     }
   };
+
+  useEffect(() => {
+    processTranscriptRef.current = processTranscript;
+  }, [processTranscript]);
 
   const handleSaveTasks = () => {
     parsedTasks.forEach((t) => addTask(t));
